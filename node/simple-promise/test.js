@@ -1,11 +1,7 @@
 var fs = require('fs');
-var Deferred = require('./deferred.js');
+var PromiseAPI = require('./promise_api.js');
 
-var readFile = function (file, encoding) {
-    var deferred = new Deferred();
-    fs.readFile(file, encoding, deferred.callback());
-    return deferred.promise;
-};
+var readFile = PromiseAPI(fs.readFile);
 
 readFile('file1.txt', 'utf8').then(function (content) {
     console.log(content);

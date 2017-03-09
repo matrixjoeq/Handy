@@ -36,6 +36,32 @@ STATIC bool isRightNode(CTreeNode* node)
     return (node->parent->right == node);
 }
 
+STATIC CTreeNode* minimum(CTreeNode* node)
+{
+	if (!node) {
+		return NULL;
+	}
+	
+	while (node->left) {
+		node = node->left;
+	}
+	
+	return node;
+}
+
+STATIC CTreeNode* maximum(CTreeNode* node)
+{
+	if (!node) {
+		return NULL;
+	}
+	
+	while (node->right) {
+		node = node->right;
+	}
+	
+	return node;
+}
+
 STATIC void clockwiseSingleRotate(CTreeNode* node)
 {
     if (!node || !node->left) {
@@ -43,11 +69,11 @@ STATIC void clockwiseSingleRotate(CTreeNode* node)
     }
 
     CTreeNode* x = node;
-    CTreeNode* y = node->left;
+    CTreeNode* y = x->left;
 
+	x->left = y->right;
     if (y->right) {
         y->right->parent = x;
-        x->left = y->right;
     }
 
     if (isRootNode(x)) {
@@ -72,11 +98,11 @@ STATIC void counterclockwiseSingleRotate(CTreeNode* node)
     }
 
     CTreeNode* x = node;
-    CTreeNode* y = node->right;
+    CTreeNode* y = x->right;
 
+	x->right = y->left;
     if (y->left) {
         y->left->parent = x;
-        x->right = y->left;
     }
 
     if (isRootNode(x)) {

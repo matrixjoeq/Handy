@@ -4,12 +4,6 @@
 #include <assert.h>
 #include "list.h"
 
-#ifndef UNIT_TEST
-#define STATIC static
-#else
-#define STATIC
-#endif
-
 STATIC CListNode* createNode(CListNode** node)
 {
     if (!node || *node) {
@@ -28,18 +22,16 @@ STATIC CListNode* createNode(CListNode** node)
     return *node;
 }
 
-STATIC CListDataPtr popNode(CListNode* node)
+STATIC void popNode(CListNode* node)
 {
     if (!node) {
-        return NULL;
+        return;
     }
 
-    CListDataPtr data = node->data;
     node->next->prev = node->prev;
     node->prev->next = node->next;
-    free(node);
-
-    return data;
+    FREE(node->data);
+    FREE(node);
 }
 
 CList* CLIST_CreateList(CList** list)
@@ -55,8 +47,7 @@ CList* CLIST_CreateList(CList** list)
 
     (*list)->node = NULL;
     if (!createNode(&((*list)->node))) {
-        free(*list);
-        *list = NULL;
+        FREE(*list);
         return NULL;
     }
 
@@ -66,7 +57,7 @@ CList* CLIST_CreateList(CList** list)
     return *list;
 }
 
-void CLIST_DestroyList(CList* list, CLIST_DestroyHandler handler)
+void CLIST_DestroyList(CList* list)
 {
     if (!list) {
         return;
@@ -76,20 +67,19 @@ void CLIST_DestroyList(CList* list, CLIST_DestroyHandler handler)
          node != list->node;
          ) {
         assert(node);
-        assert(handler);
-        handler(node->data);
         CListNode* tmp = node->next;
-        free(node);
+        FREE(node->data);
+        FREE(node);
         node = tmp;
     }
 
-    free(list->node);
-    free(list);
+    FREE(list->node);
+    FREE(list);
 
     return;
 }
 
-CListDataPtr CLIST_Front(CList* list)
+CReferencePtr CLIST_Front(CList* list)
 {
     if (CLIST_Empty(list)) {
         return NULL;
@@ -98,7 +88,7 @@ CListDataPtr CLIST_Front(CList* list)
     return list->node->next->data;
 }
 
-CListDataPtr CLIST_Back(CList* list)
+CReferencePtr CLIST_Back(CList* list)
 {
     if (CLIST_Empty(list)) {
         return NULL;
@@ -107,7 +97,7 @@ CListDataPtr CLIST_Back(CList* list)
     return list->node->prev->data;
 }
 
-CListDataPtr CLIST_Reference(CListNode* node)
+CReferencePtr CLIST_Reference(CListNode* node)
 {
     return node ? node->data : NULL;
 }
@@ -122,14 +112,22 @@ CListNode* CLIST_End(CList* list)
     return list ? list->node : NULL;
 }
 
-CListNode* CLIST_Forward(CListNode* node)
-{    
-    return node == NULL ? NULL : node->next;
+void CLIST_Forward(CListNode** node)
+{
+    if (!node || !(*node)) {
+        return;
+    }
+
+    *node = (*node)->next;
 }
 
-CListNode* CLIST_Backward(CListNode* node)
+void CLIST_Backward(CListNode** node)
 {
-    return node == NULL ? NULL : node->prev;
+    if (!node || !(*node)) {
+        return;
+    }
+
+    *node = (*node)->prev;
 }
 
 bool CLIST_Empty(CList* list)
@@ -150,15 +148,15 @@ size_t CLIST_Size(CList *list)
     return size;
 }
 
-CListNode* CLIST_PushBack(CList* list, CListDataPtr data)
+void CLIST_PushBack(CList* list, CReferencePtr data)
 {
     if (!list || !data) {
-        return NULL;
+        return;
     }
 
     CListNode* node = NULL;
     if (!createNode(&node)) {
-        return NULL;
+        return;
     }
 
     node->data = data;
@@ -166,28 +164,26 @@ CListNode* CLIST_PushBack(CList* list, CListDataPtr data)
     node->prev = list->node->prev;
     list->node->prev->next = node;
     list->node->prev = node;
-
-    return node;
 }
 
-CListDataPtr CLIST_PopBack(CList* list)
+void CLIST_PopBack(CList* list)
 {
     if (CLIST_Empty(list)) {
-        return NULL;
+        return;
     }
 
-    return popNode(list->node->prev);
+    popNode(list->node->prev);
 }
 
-CListNode* CLIST_PushFront(CList* list, CListDataPtr data)
+void CLIST_PushFront(CList* list, CReferencePtr data)
 {
     if (!list || !data) {
-        return NULL;
+        return;
     }
 
     CListNode* node = NULL;
     if (!createNode(&node)) {
-        return NULL;
+        return;
     }
 
     node->data = data;
@@ -195,28 +191,26 @@ CListNode* CLIST_PushFront(CList* list, CListDataPtr data)
     node->prev = list->node;
     list->node->next->prev = node;
     list->node->next = node;
-
-    return node;
 }
 
-CListDataPtr CLIST_PopFront(CList* list)
+void CLIST_PopFront(CList* list)
 {
     if (CLIST_Empty(list)) {
-        return NULL;
+        return;
     }
 
-    return popNode(list->node->next);
+    popNode(list->node->next);
 }
 
-CListNode* CLIST_Insert(CList* list, CListNode* pos, CListDataPtr data)
+void CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data)
 {
     if (!list || !pos || !data) {
-        return NULL;
+        return;
     }
 
     CListNode* node = NULL;
     if (!createNode(&node)) {
-        return NULL;
+        return;
     }
 
     node->data = data;
@@ -224,32 +218,30 @@ CListNode* CLIST_Insert(CList* list, CListNode* pos, CListDataPtr data)
     node->prev = pos->prev;
     pos->prev->next = node;
     pos->prev = node;
-
-    return node;
 }
 
-CListDataPtr CLIST_Erase(CList* list, CListNode* pos)
+void CLIST_Erase(CList* list, CListNode* pos)
 {
     if (!list || !pos) {
-        return NULL;
+        return;
     }
 
-    return popNode(pos);
+    popNode(pos);
 }
 
-CListDataPtr CLIST_Remove(CList* list, CListDataPtr data)
+void CLIST_Remove(CList* list, CReferencePtr data)
 {
     CListNode* node = CLIST_Find(list, data);
-    return popNode(node);
+    popNode(node);
 }
 
-CListDataPtr CLIST_RemoveIf(CList* list, CListDataPtr data, CLIST_Predicate pred)
+void CLIST_RemoveIf(CList* list, CReferencePtr data, CPredicate pred)
 {
     CListNode* node = CLIST_FindIf(list, data, pred);
-    return popNode(node);
+    popNode(node);
 }
 
-CListNode* CLIST_Find(CList* list, CListDataPtr data)
+CListNode* CLIST_Find(CList* list, CReferencePtr data)
 {
     if (!list || !data) {
         return NULL;
@@ -267,7 +259,7 @@ CListNode* CLIST_Find(CList* list, CListDataPtr data)
     return NULL;
 }
 
-CListNode* CLIST_FindIf(CList* list, CListDataPtr data, CLIST_Predicate pred)
+CListNode* CLIST_FindIf(CList* list, CReferencePtr data, CPredicate pred)
 {
     if (!pred) {
         return CLIST_Find(list, data);
@@ -285,7 +277,7 @@ CListNode* CLIST_FindIf(CList* list, CListDataPtr data, CLIST_Predicate pred)
     return NULL;
 }
 
-void CLIST_ForEach(CListNode* first, CListNode* last, CLIST_UnaryFunction func)
+void CLIST_ForEach(CListNode* first, CListNode* last, CUnaryFunction func)
 {
     if (!first || !last || !func) {
         return;
@@ -299,7 +291,7 @@ void CLIST_ForEach(CListNode* first, CListNode* last, CLIST_UnaryFunction func)
     return;
 }
 
-void CLIST_ForEachEx(CListNode* first, CListNode* last, UserDataPtr userData, CLIST_BinaryFunction func)
+void CLIST_ForEachEx(CListNode* first, CListNode* last, CUserDataPtr userData, CBinaryFunction func)
 {
     if (!first || !last || !func) {
         return;

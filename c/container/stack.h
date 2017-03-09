@@ -10,24 +10,21 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef void* CStackDataPtr;
 typedef struct __c_stack {
     CList* sequence;
 } CStack;
-
-typedef void (*CSTACK_DestroyHandler)(CStackDataPtr data);
 
 /**
  * constructor/destructor
  */
 CStack* CSTACK_CreateStack(CStack** stack);
-void CSTACK_DestroyStack(CStack* stack, CSTACK_DestroyHandler handler);
+void CSTACK_DestroyStack(CStack* stack);
 
 /**
  * element access
  */
-CStackDataPtr CSTACK_Top(CStack* stack);
-const CStackDataPtr CSTACK_TopConst(CStack* stack);
+CReferencePtr CSTACK_Top(CStack* stack);
+const CReferencePtr CSTACK_TopConst(CStack* stack);
 
 /**
  * capacity
@@ -38,8 +35,8 @@ size_t CSTACK_Size(CStack* stack);
 /**
  * modifiers
  */
-void CSTACK_Push(CStack* stack, CStackDataPtr data);
-CStackDataPtr CSTACK_Pop(CStack* stack);
+void CSTACK_Push(CStack* stack, CReferencePtr data);
+void CSTACK_Pop(CStack* stack);
 
 #ifdef __cplusplus
 }

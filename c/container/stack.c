@@ -3,13 +3,6 @@
 #include <assert.h>
 #include "stack.h"
 
-#ifndef UNIT_TEST
-#define STATIC static
-#else
-#define STATIC
-#endif
-
-
 CStack* CSTACK_CreateStack(CStack** stack)
 {
     if (!stack || *stack) {
@@ -20,35 +13,35 @@ CStack* CSTACK_CreateStack(CStack** stack)
     if (!(*stack)) {
         return NULL;
     }
-    
+
     if (!CLIST_CreateList(&((*stack)->sequence))) {
-        free(*stack);
+        FREE(*stack);
         return NULL;
     }
-    
+
     return *stack;
 }
 
-void CSTACK_DestroyStack(CStack* stack, CSTACK_DestroyHandler handler)
+void CSTACK_DestroyStack(CStack* stack)
 {
     if (!stack) {
         return;
     }
 
-    CLIST_DestroyList(stack->sequence, (CLIST_DestroyHandler)handler);
-    free(stack);
+    CLIST_DestroyList(stack->sequence);
+    FREE(stack);
 
     return;
 }
 
-CStackDataPtr CSTACK_Top(CStack* stack)
+CReferencePtr CSTACK_Top(CStack* stack)
 {
-    return stack ? (CStackDataPtr)CLIST_Back(stack->sequence) : NULL;
+    return stack ? CLIST_Back(stack->sequence) : NULL;
 }
 
-const CStackDataPtr CSTACK_TopConst(CStack* stack)
+const CReferencePtr CSTACK_TopConst(CStack* stack)
 {
-    return stack ? (CStackDataPtr)CLIST_Back(stack->sequence) : NULL;
+    return stack ? CLIST_Back(stack->sequence) : NULL;
 }
 
 bool CSTACK_Empty(CStack* stack)
@@ -61,16 +54,20 @@ size_t CSTACK_Size(CStack* stack)
     return stack ? CLIST_Size(stack->sequence) : 0;
 }
 
-void CSTACK_Push(CStack* stack, CStackDataPtr data)
+void CSTACK_Push(CStack* stack, CReferencePtr data)
 {
     if (!stack) {
         return;
     }
-    
-    CLIST_PushBack(stack->sequence, (CListDataPtr)data);
+
+    CLIST_PushBack(stack->sequence, data);
 }
 
-CStackDataPtr CSTACK_Pop(CStack* stack)
+void CSTACK_Pop(CStack* stack)
 {
-    return stack ? (CStackDataPtr)CLIST_PopBack(stack->sequence) : NULL;
+    if (!stack) {
+        return;
+    }
+
+    CLIST_PopBack(stack->sequence);
 }

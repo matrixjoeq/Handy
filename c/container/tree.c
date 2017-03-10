@@ -214,6 +214,22 @@ STATIC CTreeNode* __create_node(CTreeNode** node, CReferencePtr data)
     return *node;
 }
 
+STATIC void __destroy_node(CTreeNode* node)
+{
+    FREE(node->data);
+    FREE(node);
+}
+
+STATIC void __erase(CTreeNode* node) // erase node and it's children
+{
+    while (node) {
+        __erase(node->right);
+        CTreeNode* left = node->left;
+        __destroy_node(node);
+        node = left;
+    }
+}
+
 STATIC void __rebalance(CTree* tree, CTreeNode* node)
 {
 }
@@ -228,8 +244,8 @@ STATIC CTreeNode* __insert(CTree* tree, CTreeNode* node, CTreeNode* parent, CRef
     }
 
     CCompare key_compare = tree->key_compare;
+    CTreeNode* header = tree->header;
     if (parent == tree->header || key_compare(data, parent->data)) {
-        CTreeNode* header = tree->header;
         parent->left = new_node;
 
         if (parent == header) {
@@ -283,6 +299,13 @@ CTree* CTREE_CreateTree(CTree** tree, CCompare comp)
 
 void CTREE_DestroyTree(CTree* tree)
 {
+    CTREE_Clear(tree);
+    FREE(tree);
+}
+
+CReferencePtr CTREE_Reference(CTreeNode* node)
+{
+    return node ? __value(node) : NULL;
 }
 
 CTreeNode* CTREE_Begin(CTree* tree)
@@ -419,7 +442,32 @@ void CTREE_Erase(CTree* tree, CTreeNode* node)
 {
 }
 
+void CTREE_Clear(CTree* tree)
+{
+    if (!tree) {
+        return;
+    }
+
+    __erase(__root(tree));
+    CTreeNode* header = tree->header;
+    header->parent = NULL;
+    header->left = header;
+    header->right = header;
+    tree->node_count = 0;
+}
+
 CTreeNode* CTREE_Find(CTree* tree, CReferencePtr data)
 {
+    if (CTREE_Empty(tree) || !data) {
+        return NULL;
+    }
+
+    CCompare key_compare = tree->key_compare;
+    for (CTreeNode* node = CTREE_Begin(tree); node != CTREE_End(tree); CTREE_Forward(&node)) {
+        if (!key_compare(node->data, data) && !key_compare(data, node->data)) {
+            return node;
+        }
+    }
+
     return NULL;
 }

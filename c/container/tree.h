@@ -29,6 +29,11 @@ CTree* CTREE_CreateTree(CTree** tree, CCompare comp);
 void CTREE_DestroyTree(CTree* tree);
 
 /**
+ * element access
+ */
+CReferencePtr CTREE_Reference(CTreeNode* node);
+
+/**
  * iterators
  */
 CTreeNode* CTREE_Begin(CTree* tree);
@@ -49,6 +54,7 @@ size_t CTREE_MaxSize(void);
 CTreeNode* CTREE_InsertEqual(CTree* tree, CReferencePtr data);
 CTreeNode* CTREE_InsertUnique(CTree* tree, CReferencePtr data);
 void CTREE_Erase(CTree* tree, CTreeNode* node);
+void CTREE_Clear(CTree* tree);
 
 /**
  * operations

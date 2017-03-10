@@ -240,7 +240,7 @@ void CLIST_RemoveIf(CList* list, CReferencePtr data, CPredicate pred)
 
 CListNode* CLIST_Find(CList* list, CReferencePtr data)
 {
-    if (!list || !data) {
+    if (CLIST_Empty(list) || !data) {
         return NULL;
     }
 

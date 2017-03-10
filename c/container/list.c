@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "list.h"
 
-STATIC CListNode* createNode(CListNode** node)
+STATIC CListNode* __createNode(CListNode** node, CReferencePtr data)
 {
     if (!node || *node) {
         return NULL;
@@ -17,12 +17,12 @@ STATIC CListNode* createNode(CListNode** node)
 
     (*node)->prev = NULL;
     (*node)->next = NULL;
-    (*node)->data = NULL;
+    (*node)->data = data;
 
     return *node;
 }
 
-STATIC void popNode(CListNode* node)
+STATIC void __popNode(CListNode* node)
 {
     if (!node) {
         return;
@@ -46,7 +46,7 @@ CList* CLIST_CreateList(CList** list)
     }
 
     (*list)->node = NULL;
-    if (!createNode(&((*list)->node))) {
+    if (!__createNode(&((*list)->node), NULL)) {
         FREE(*list);
         return NULL;
     }
@@ -155,11 +155,10 @@ void CLIST_PushBack(CList* list, CReferencePtr data)
     }
 
     CListNode* node = NULL;
-    if (!createNode(&node)) {
+    if (!__createNode(&node, data)) {
         return;
     }
 
-    node->data = data;
     node->next = list->node;
     node->prev = list->node->prev;
     list->node->prev->next = node;
@@ -172,7 +171,7 @@ void CLIST_PopBack(CList* list)
         return;
     }
 
-    popNode(list->node->prev);
+    __popNode(list->node->prev);
 }
 
 void CLIST_PushFront(CList* list, CReferencePtr data)
@@ -182,11 +181,10 @@ void CLIST_PushFront(CList* list, CReferencePtr data)
     }
 
     CListNode* node = NULL;
-    if (!createNode(&node)) {
+    if (!__createNode(&node, data)) {
         return;
     }
 
-    node->data = data;
     node->next = list->node->next;
     node->prev = list->node;
     list->node->next->prev = node;
@@ -199,7 +197,7 @@ void CLIST_PopFront(CList* list)
         return;
     }
 
-    popNode(list->node->next);
+    __popNode(list->node->next);
 }
 
 void CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data)
@@ -209,11 +207,10 @@ void CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data)
     }
 
     CListNode* node = NULL;
-    if (!createNode(&node)) {
+    if (!__createNode(&node, data)) {
         return;
     }
 
-    node->data = data;
     node->next = pos;
     node->prev = pos->prev;
     pos->prev->next = node;
@@ -226,19 +223,19 @@ void CLIST_Erase(CList* list, CListNode* pos)
         return;
     }
 
-    popNode(pos);
+    __popNode(pos);
 }
 
 void CLIST_Remove(CList* list, CReferencePtr data)
 {
     CListNode* node = CLIST_Find(list, data);
-    popNode(node);
+    __popNode(node);
 }
 
 void CLIST_RemoveIf(CList* list, CReferencePtr data, CPredicate pred)
 {
     CListNode* node = CLIST_FindIf(list, data, pred);
-    popNode(node);
+    __popNode(node);
 }
 
 CListNode* CLIST_Find(CList* list, CReferencePtr data)
@@ -248,8 +245,8 @@ CListNode* CLIST_Find(CList* list, CReferencePtr data)
     }
 
     for (CListNode* node = CLIST_Begin(list);
-            node != CLIST_End(list);
-            node = node->next) {
+         node != CLIST_End(list);
+         node = node->next) {
         assert(node);
         if (data == node->data) {
             return node;
@@ -266,8 +263,8 @@ CListNode* CLIST_FindIf(CList* list, CReferencePtr data, CPredicate pred)
     }
 
     for (CListNode* node = CLIST_Begin(list);
-            node != CLIST_End(list);
-            node = node->next) {
+         node != CLIST_End(list);
+         node = node->next) {
         assert(node);
         if (pred(data, node->data)) {
             return node;

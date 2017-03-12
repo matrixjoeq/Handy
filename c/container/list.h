@@ -19,12 +19,13 @@ typedef struct __c_list_node {
 
 typedef struct __c_list {
     CListNode* node;
+    CCompare compare;
 } CList;
 
 /**
  * constructor/destructor
  */
-CList* CLIST_CreateList(CList** list);
+CList* CLIST_CreateList(CList** list, CCompare comp);
 void CLIST_DestroyList(CList* list);
 
 /**
@@ -55,22 +56,21 @@ void CLIST_PushBack(CList* list, CReferencePtr data);
 void CLIST_PopBack(CList* list);
 void CLIST_PushFront(CList* list, CReferencePtr data);
 void CLIST_PopFront(CList* list);
-void CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data);
+CListNode* CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data);
 void CLIST_Erase(CList* list, CListNode* pos);
 
 /**
  * operations
  */
 void CLIST_Remove(CList* list, CReferencePtr data);
-void CLIST_RemoveIf(CList* list, CReferencePtr data, CPredicate pred);
+void CLIST_RemoveIf(CList* list, CUnaryPredicate pred);
 
 /**
  * algorithms
  */
 CListNode* CLIST_Find(CList* list, CReferencePtr data);
-CListNode* CLIST_FindIf(CList* list, CReferencePtr data, CPredicate pred);
+CListNode* CLIST_FindIf(CList* list, CUnaryPredicate pred);
 void CLIST_ForEach(CListNode* first, CListNode* last, CUnaryFunction func);
-void CLIST_ForEachEx(CListNode* first, CListNode* last, CUserDataPtr userData, CBinaryFunction func);
 
 #ifdef __cplusplus
 }

@@ -17,14 +17,13 @@ typedef struct __c_stack {
 /**
  * constructor/destructor
  */
-CStack* CSTACK_CreateStack(CStack** stack);
+CStack* CSTACK_CreateStack(CStack** stack, CCompare comp);
 void CSTACK_DestroyStack(CStack* stack);
 
 /**
  * element access
  */
 CReferencePtr CSTACK_Top(CStack* stack);
-const CReferencePtr CSTACK_TopConst(CStack* stack);
 
 /**
  * capacity

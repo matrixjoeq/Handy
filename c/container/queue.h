@@ -18,16 +18,14 @@ typedef struct __c_queue {
 /**
  * constructor/destructor
  */
-CQueue* CQUEUE_CreateQueue(CQueue** queue);
+CQueue* CQUEUE_CreateQueue(CQueue** queue, CCompare comp);
 void CQUEUE_DestroyQueue(CQueue* queue);
 
 /**
  * element access
  */
 CReferencePtr CQUEUE_Front(CQueue* queue);
-const CReferencePtr CQUEUE_FrontConst(CQueue* queue);
 CReferencePtr CQUEUE_Back(CQueue* queue);
-const CReferencePtr CQUEUE_BackConst(CQueue* queue);
 
 /**
  * capacity

@@ -110,7 +110,7 @@ STATIC CTreeNode* __maximum(CTreeNode* node)
 
     return node;
 }
-
+/*
 STATIC void __rotate_right(CTreeNode* node)
 {
     if (!node || !node->left) {
@@ -188,7 +188,7 @@ STATIC void __double_rotate_left(CTreeNode* node)
     __rotate_right(node->right);
     __rotate_left(node);
 }
-
+*/
 STATIC bool __default_key_compare(CReferencePtr lhs, CReferencePtr rhs)
 {
     return (lhs < rhs);
@@ -232,6 +232,8 @@ STATIC void __erase(CTreeNode* node) // erase node and it's children
 
 STATIC void __rebalance(CTree* tree, CTreeNode* node)
 {
+    UNUSE(tree);
+    UNUSE(node);
 }
 
 STATIC CTreeNode* __insert(CTree* tree, CTreeNode* node, CTreeNode* parent, CReferencePtr data)
@@ -440,6 +442,8 @@ CTreeNode* CTREE_InsertUnique(CTree* tree, CReferencePtr data)
 
 void CTREE_Erase(CTree* tree, CTreeNode* node)
 {
+    UNUSE(tree);
+    UNUSE(node);
 }
 
 void CTREE_Clear(CTree* tree)
@@ -459,15 +463,23 @@ void CTREE_Clear(CTree* tree)
 CTreeNode* CTREE_Find(CTree* tree, CReferencePtr data)
 {
     if (CTREE_Empty(tree) || !data) {
-        return NULL;
+        return CTREE_End(tree);
     }
 
     CCompare key_compare = tree->key_compare;
-    for (CTreeNode* node = CTREE_Begin(tree); node != CTREE_End(tree); CTREE_Forward(&node)) {
-        if (!key_compare(node->data, data) && !key_compare(data, node->data)) {
-            return node;
+    CTreeNode* node = __root(tree);
+    while (node) {
+        if (key_compare(data, node->data)) {
+            node = node->left;
+        }
+        else {
+            if (!key_compare(node->data, data)) {
+                return node;
+            }
+
+            node = node->right;
         }
     }
 
-    return NULL;
+    return CTREE_End(tree);
 }

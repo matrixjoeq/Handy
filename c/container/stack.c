@@ -3,7 +3,7 @@
 #include <assert.h>
 #include "stack.h"
 
-CStack* CSTACK_CreateStack(CStack** stack)
+CStack* CSTACK_CreateStack(CStack** stack, CCompare comp)
 {
     if (!stack || *stack) {
         return NULL;
@@ -14,7 +14,7 @@ CStack* CSTACK_CreateStack(CStack** stack)
         return NULL;
     }
 
-    if (!CLIST_CreateList(&((*stack)->sequence))) {
+    if (!CLIST_CreateList(&((*stack)->sequence), comp)) {
         FREE(*stack);
         return NULL;
     }
@@ -35,11 +35,6 @@ void CSTACK_DestroyStack(CStack* stack)
 }
 
 CReferencePtr CSTACK_Top(CStack* stack)
-{
-    return stack ? CLIST_Back(stack->sequence) : NULL;
-}
-
-const CReferencePtr CSTACK_TopConst(CStack* stack)
 {
     return stack ? CLIST_Back(stack->sequence) : NULL;
 }

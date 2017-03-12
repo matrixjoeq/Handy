@@ -3,7 +3,7 @@
 #include <assert.h>
 #include "queue.h"
 
-CQueue* CQUEUE_CreateStack(CQueue** queue)
+CQueue* CQUEUE_CreateStack(CQueue** queue, CCompare comp)
 {
     if (!queue || *queue) {
         return NULL;
@@ -14,7 +14,7 @@ CQueue* CQUEUE_CreateStack(CQueue** queue)
         return NULL;
     }
 
-    if (!CLIST_CreateList(&((*queue)->sequence))) {
+    if (!CLIST_CreateList(&((*queue)->sequence), comp)) {
         FREE(*queue);
         return NULL;
     }
@@ -39,17 +39,7 @@ CReferencePtr CQUEUE_Front(CQueue* queue)
     return queue ? CLIST_Front(queue->sequence) : NULL;
 }
 
-const CReferencePtr CQUEUE_FrontConst(CQueue* queue)
-{
-    return queue ? CLIST_Front(queue->sequence) : NULL;
-}
-
 CReferencePtr CQUEUE_Back(CQueue* queue)
-{
-    return queue ? CLIST_Back(queue->sequence) : NULL;
-}
-
-const CReferencePtr CQUEUE_BackConst(CQueue* queue)
 {
     return queue ? CLIST_Back(queue->sequence) : NULL;
 }

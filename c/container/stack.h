@@ -17,7 +17,7 @@ typedef struct __c_stack {
 /**
  * constructor/destructor
  */
-CStack* CSTACK_CreateStack(CStack** stack, CCompare comp);
+CStack* CSTACK_CreateStack(CStack** stack);
 void CSTACK_DestroyStack(CStack* stack);
 
 /**

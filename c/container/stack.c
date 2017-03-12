@@ -3,7 +3,7 @@
 #include <assert.h>
 #include "stack.h"
 
-CStack* CSTACK_CreateStack(CStack** stack, CCompare comp)
+CStack* CSTACK_CreateStack(CStack** stack)
 {
     if (!stack || *stack) {
         return NULL;
@@ -14,7 +14,8 @@ CStack* CSTACK_CreateStack(CStack** stack, CCompare comp)
         return NULL;
     }
 
-    if (!CLIST_CreateList(&((*stack)->sequence), comp)) {
+    (*stack)->sequence = NULL;
+    if (!CLIST_CreateList(&((*stack)->sequence), NULL)) {
         FREE(*stack);
         return NULL;
     }

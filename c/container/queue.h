@@ -18,7 +18,7 @@ typedef struct __c_queue {
 /**
  * constructor/destructor
  */
-CQueue* CQUEUE_CreateQueue(CQueue** queue, CCompare comp);
+CQueue* CQUEUE_CreateQueue(CQueue** queue);
 void CQUEUE_DestroyQueue(CQueue* queue);
 
 /**

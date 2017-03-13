@@ -4,17 +4,16 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "shared_types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-typedef void* CVectorDataPtr;
-
 typedef struct __c_vector {
-    CVectorDataPtr start;
-    CVectorDataPtr finish;
-    CVectorDataPtr end_of_storage;
+    CReferencePtr start;
+    CReferencePtr finish;
+    CReferencePtr end_of_storage;
 } CVector;
 
 

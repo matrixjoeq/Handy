@@ -4,7 +4,6 @@
 
 namespace handy {
 namespace c {
-
 namespace {
 
 using ::testing::TestWithParam;
@@ -45,6 +44,13 @@ bool Less(CReferencePtr lhs, CReferencePtr rhs)
     T* rhs_ = reinterpret_cast<T*>(rhs);
 
     return (*lhs_ < *rhs_);
+}
+
+template<typename T>
+void Do(CReferencePtr data)
+{
+    T* data_ = reinterpret_cast<T*>(data);
+    ++(*data_);
 }
 
 class CListTestModifier : public TestWithParam<struct Param> {};
@@ -228,7 +234,7 @@ TEST_P(CListTestAlgorithm, FindIf)
         CLIST_PushBack(list, num);
     }
 
-    // TODO
+    EXPECT_NE(CLIST_End(list), CLIST_FindIf(list, Equal<int, 4>));
 
     DESTROY_LIST(list);
 }
@@ -243,23 +249,7 @@ TEST_P(CListTestAlgorithm, ForEach)
         CLIST_PushBack(list, num);
     }
 
-    // TODO
-    //CLIST_ForEach(CLIST_Begin(list), CLIST_End(list), Do);
-
-    DESTROY_LIST(list);
-}
-
-TEST_P(CListTestAlgorithm, ForEachEx)
-{
-    Param param = GetParam();
-    CREATE_LIST(list);
-
-    ARRAY_FOREACH(param.numbers, i) {
-        CREATE_DATA(num, int, param.numbers[i]);
-        CLIST_PushBack(list, num);
-    }
-
-    // TODO
+    CLIST_ForEach(CLIST_Begin(list), CLIST_End(list), Do<int>);
 
     DESTROY_LIST(list);
 }

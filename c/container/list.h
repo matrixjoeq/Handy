@@ -9,7 +9,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 
 typedef struct __c_list_node {
     struct __c_list_node* prev;
@@ -74,7 +74,7 @@ void CLIST_ForEach(CListNode* first, CListNode* last, CUnaryFunction func);
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
 #endif  // __HANDY_C_CONTAINER_LIST_H
 

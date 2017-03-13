@@ -6,6 +6,10 @@
 #include <stddef.h>
 #include "shared_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 typedef bool __rb_tree_color_type;
 
 typedef struct __c_tree_node {
@@ -64,5 +68,9 @@ void CTREE_Clear(CTree* tree);
  * algorithms
  */
 CTreeNode* CTREE_Find(CTree* tree, CReferencePtr data);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // __HANDY_C_CONTAINER_TREE_H

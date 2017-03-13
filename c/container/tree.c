@@ -45,6 +45,24 @@ STATIC INLINE bool __is_right(CTreeNode* node)
     return (node->parent->right == node);
 }
 
+STATIC INLINE bool __is_black(CTreeNode* node)
+{
+    if (!node) {
+        return true;
+    }
+
+    return (node->color == s_rb_tree_color_black);
+}
+
+STATIC INLINE bool __is_red(CTreeNode* node)
+{
+    if (!node) {
+        return false;
+    }
+
+    return (node->color == s_rb_tree_color_red);
+}
+
 STATIC INLINE CTreeNode* __left(CTreeNode* node)
 {
     return node->left;
@@ -58,6 +76,17 @@ STATIC INLINE CTreeNode* __right(CTreeNode* node)
 STATIC INLINE CTreeNode* __parent(CTreeNode* node)
 {
     return node->parent;
+}
+
+STATIC INLINE CTreeNode* __grand_parent(CTreeNode* node)
+{
+    return node->parent->parent;
+}
+
+STATIC INLINE CTreeNode* __uncle(CTreeNode* node)
+{
+    return (__is_left(__parent(node)) ? __right(__grand_parent(node))
+                                      : __left(__grand_parent(node)));
 }
 
 STATIC INLINE __rb_tree_color_type __color(CTreeNode* node)
@@ -110,8 +139,8 @@ STATIC CTreeNode* __maximum(CTreeNode* node)
 
     return node;
 }
-/*
-STATIC void __rotate_right(CTreeNode* node)
+
+STATIC void __rotate_right(CTreeNode* node, CTreeNode* root)
 {
     if (!node || !node->left) {
         return;
@@ -125,7 +154,7 @@ STATIC void __rotate_right(CTreeNode* node)
         y->right->parent = x;
     }
 
-    if (__is_root(x)) {
+    if (x == root) {
         x->parent->parent = y;
     }
     else if (__is_left(x)) {
@@ -140,7 +169,7 @@ STATIC void __rotate_right(CTreeNode* node)
     x->parent = y;
 }
 
-STATIC void __rotate_left(CTreeNode* node)
+STATIC void __rotate_left(CTreeNode* node, CTreeNode* root)
 {
     if (!node || !node->right) {
         return;
@@ -154,7 +183,7 @@ STATIC void __rotate_left(CTreeNode* node)
         y->left->parent = x;
     }
 
-    if (__is_root(x)) {
+    if (x == root) {
         x->parent->parent = y;
     }
     else if (__is_left(x)) {
@@ -169,27 +198,7 @@ STATIC void __rotate_left(CTreeNode* node)
     x->parent = y;
 }
 
-STATIC void __double_rotate_right(CTreeNode* node)
-{
-    if (!node || !node->left) {
-        return;
-    }
-
-    __rotate_left(node->left);
-    __rotate_right(node);
-}
-
-STATIC void __double_rotate_left(CTreeNode* node)
-{
-    if (!node || !node->right) {
-        return;
-    }
-
-    __rotate_right(node->right);
-    __rotate_left(node);
-}
-*/
-STATIC bool __default_key_compare(CReferencePtr lhs, CReferencePtr rhs)
+STATIC bool __key_compare(CReferencePtr lhs, CReferencePtr rhs)
 {
     return (lhs < rhs);
 }
@@ -230,10 +239,52 @@ STATIC void __erase(CTreeNode* node) // erase node and it's children
     }
 }
 
-STATIC void __rebalance(CTree* tree, CTreeNode* node)
+STATIC void __rebalance_insert(CTree* tree, CTreeNode* node)
 {
-    UNUSE(tree);
-    UNUSE(node);
+    if (!tree || !node) {
+        return;
+    }
+
+    while (__root(tree) != node && __is_red(__parent(node))) {
+        if (__is_left(__parent(node))) {
+            if (__is_red(__uncle(node))) {
+                __parent(node)->color = s_rb_tree_color_black;
+                __uncle(node)->color = s_rb_tree_color_black;
+                __grand_parent(node)->color = s_rb_tree_color_red;
+                node = __grand_parent(node);
+            }
+            else {
+                if (__is_right(node)) {
+                    node = __parent(node);
+                    __rotate_left(node, __root(tree));
+                }
+
+                __parent(node)->color = s_rb_tree_color_black;
+                __grand_parent(node)->color = s_rb_tree_color_red;
+                __rotate_right(__grand_parent(node), __root(tree));
+            }
+        }
+        else {
+            if (__is_red(__uncle(node))) {
+                __parent(node)->color = s_rb_tree_color_black;
+                __uncle(node)->color = s_rb_tree_color_black;
+                __grand_parent(node)->color = s_rb_tree_color_red;
+                node = __grand_parent(node);
+            }
+            else {
+                if (__is_left(node)) {
+                    node = __parent(node);
+                    __rotate_right(node, __root(tree));
+                }
+
+                __parent(node)->color = s_rb_tree_color_black;
+                __grand_parent(node)->color = s_rb_tree_color_red;
+                __rotate_left(__grand_parent(node), __root(tree));
+            }
+        }
+    }
+
+    __root(tree)->color = s_rb_tree_color_black;
 }
 
 STATIC CTreeNode* __insert(CTree* tree, CTreeNode* node, CTreeNode* parent, CReferencePtr data)
@@ -268,7 +319,7 @@ STATIC CTreeNode* __insert(CTree* tree, CTreeNode* node, CTreeNode* parent, CRef
 
     new_node->parent = parent;
 
-    __rebalance(tree, new_node);
+    __rebalance_insert(tree, new_node);
     ++(tree->node_count);
 
     return new_node;
@@ -292,7 +343,7 @@ CTree* CTREE_CreateTree(CTree** tree, CCompare comp)
     }
 
     (*tree)->node_count = 0;
-    (*tree)->key_compare = comp ? comp : __default_key_compare;
+    (*tree)->key_compare = comp ? comp : __key_compare;
     (*tree)->header->left = (*tree)->header;
     (*tree)->header->right = (*tree)->header;
 
@@ -387,7 +438,7 @@ size_t CTREE_Size(CTree* tree)
 
 size_t CTREE_MaxSize(void)
 {
-    return (size_t)(-1);
+    return (-1);
 }
 
 CTreeNode* CTREE_InsertEqual(CTree* tree, CReferencePtr data)

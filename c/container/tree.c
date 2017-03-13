@@ -291,7 +291,7 @@ STATIC CTreeNode* __insert(CTree* tree, CTreeNode* node, CTreeNode* parent, CRef
 {
     assert(!node);
 
-    CTreeNode* new_node;
+    CTreeNode* new_node = NULL;
     if (!__create_node(&new_node, data)) {
         return NULL;
     }

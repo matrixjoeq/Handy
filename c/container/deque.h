@@ -5,41 +5,39 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "list.h"
+#include "vector.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-typedef struct __c_queue {
-    CList* sequence;
-} CQueue;
+typedef struct __c_deque {
+    CVector* sequence;
+} CDeque;
 
 /**
  * constructor/destructor
  */
-CQueue* CQUEUE_CreateQueue(CQueue** queue);
-void CQUEUE_DestroyQueue(CQueue* queue);
+CDeque* CDEQUE_CreateDeque(CDeque** deque);
+void CDEQUE_DestroyDeque(CDeque* deque);
 
 /**
  * element access
  */
-CReferencePtr CQUEUE_Front(CQueue* queue);
-const CReferencePtr CQUEUE_FrontConst(CQueue* queue);
-CReferencePtr CQUEUE_Back(CQueue* queue);
-const CReferencePtr CQUEUE_BackConst(CQueue* queue);
+CReferencePtr CDEQUE_Front(CDeque* deque);
+CReferencePtr CDEQUE_Back(CDeque* deque);
 
 /**
  * capacity
  */
-bool CQUEUE_Empty(CQueue* queue);
-size_t CQUEUE_Size(CQueue* queue);
+bool CDEQUE_Empty(CDeque* deque);
+size_t CDEQUE_Size(CDeque* deque);
 
 /**
  * modifiers
  */
-void CQUEUE_Push(CQueue* queue, CReferencePtr data);
-void CQUEUE_Pop(CQueue* queue);
+void CDEQUE_Push(CDeque* deque, CReferencePtr data);
+void CDEQUE_Pop(CDeque* deque);
 
 #ifdef __cplusplus
 }

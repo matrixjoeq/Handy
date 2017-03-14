@@ -76,6 +76,25 @@ TEST(CTreeTest, CreateDestroy)
     DESTROY_TREE(tree);
 }
 
+TEST(CTreeTest, Clear)
+{
+    const int numbers[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+    CREATE_TREE(tree);
+    ARRAY_FOREACH(numbers, i) {
+        CREATE_DATA(num, int, numbers[i]);
+        CTREE_InsertEqual(tree, num);
+    }
+
+    EXPECT_FALSE(CTREE_Empty(tree));
+    EXPECT_EQ(CTREE_Size(tree), ARRAY_LENGTH(numbers));
+    CTREE_Clear(tree);
+    EXPECT_TRUE(CTREE_Empty(tree));
+    EXPECT_EQ(CTREE_Size(tree), 0);
+
+    DESTROY_TREE(tree);
+}
+
 TEST_P(CTreeTestUnique, InsertErase)
 {
     Param param = GetParam();
@@ -86,7 +105,10 @@ TEST_P(CTreeTestUnique, InsertErase)
         CTREE_InsertUnique(tree, num);
         EXPECT_FALSE(CTREE_Empty(tree));
         EXPECT_EQ(CTREE_Size(tree), i + 1);
-        EXPECT_NE(CTREE_End(tree), CTREE_Find(tree, &param.numbers[i]));
+        CTreeNode* found = CTREE_Find(tree, &param.numbers[i]);
+        EXPECT_NE(CTREE_End(tree), found);
+        int* number_found = reinterpret_cast<int*>(CTREE_Reference(found));
+        EXPECT_EQ(param.numbers[i], *number_found);
     }
 
     int* prev = NULL;
@@ -114,11 +136,15 @@ TEST_P(CTreeTestEqual, InsertErase)
         CTREE_InsertEqual(tree, num);
         EXPECT_FALSE(CTREE_Empty(tree));
         EXPECT_EQ(CTREE_Size(tree), i + 1);
-        EXPECT_NE(CTREE_End(tree), CTREE_Find(tree, &param.numbers[i]));
+        CTreeNode* found = CTREE_Find(tree, &param.numbers[i]);
+        EXPECT_NE(CTREE_End(tree), found);
+        int* number_found = reinterpret_cast<int*>(CTREE_Reference(found));
+        EXPECT_EQ(param.numbers[i], *number_found);
     }
 
     int* prev = NULL;
     for (CTreeNode* it = CTREE_Begin(tree); it != CTREE_End(tree); CTREE_Forward(&it)) {
+        //printf("%d ", *(reinterpret_cast<int*>(CTREE_Reference(it))));
         if (it == CTREE_Begin(tree)) {
             prev = reinterpret_cast<int*>(CTREE_Reference(it));
         }
@@ -128,6 +154,7 @@ TEST_P(CTreeTestEqual, InsertErase)
             prev = current;
         }
     }
+    //printf("\n");
 
     DESTROY_TREE(tree);
 }

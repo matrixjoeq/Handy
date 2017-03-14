@@ -218,7 +218,10 @@ TEST_P(CListTestAlgorithm, Find)
     ARRAY_FOREACH(param.numbers, i) {
         CREATE_DATA(num, int, param.numbers[i]);
         CLIST_PushBack(list, num);
-        EXPECT_NE(CLIST_End(list), CLIST_Find(list, num));
+        CListNode* found = CLIST_Find(list, num);
+        EXPECT_NE(CLIST_End(list), found);
+        int* found_number = reinterpret_cast<int*>(CLIST_Reference(found));
+        EXPECT_EQ(param.numbers[i], *found_number);
     }
 
     DESTROY_LIST(list);

@@ -9,58 +9,44 @@ static const __rb_tree_color_type s_rb_tree_color_black = true;
 
 STATIC INLINE bool __is_header(CTreeNode* node)
 {
-    if (!node) {
-        return false;
-    }
-
-    return (node->parent->parent == node &&
-            node->color == s_rb_tree_color_red);
+    return (node ? (node->parent->parent == node &&
+					node->color == s_rb_tree_color_red) : false);
 }
 
 STATIC INLINE bool __is_root(CTreeNode* node)
 {
-    if (!node) {
-        return false;
-    }
-
-    return (node->parent->parent == node &&
-            node->color == s_rb_tree_color_black);
+    return (node ? (node->parent->parent == node &&
+				    node->color == s_rb_tree_color_black) : false);
 }
 
 STATIC INLINE bool __is_left(CTreeNode* node)
 {
-    if (!node) {
-        return false;
-    }
-
-    return (node->parent->left == node);
+    return (node ? node->parent->left == node : false);
 }
 
 STATIC INLINE bool __is_right(CTreeNode* node)
 {
-    if (!node) {
-        return false;
-    }
-
-    return (node->parent->right == node);
+    return (node ? node->parent->right == node : false);
 }
 
 STATIC INLINE bool __is_black(CTreeNode* node)
-{
-    if (!node) {
-        return true;
-    }
-
-    return (node->color == s_rb_tree_color_black);
+{ 
+	return (node ? (node->color == s_rb_tree_color_black) : true);
 }
 
 STATIC INLINE bool __is_red(CTreeNode* node)
 {
-    if (!node) {
-        return false;
-    }
+    return (node ? (node->color == s_rb_tree_color_red) : false);
+}
 
-    return (node->color == s_rb_tree_color_red);
+STATIC INLINE bool __has_left(CTreeNode* node)
+{
+	return (node ? node->left != NULL : false);
+}
+
+STATIC INLINE bool __has_right(CTreeNode* node)
+{
+	return (node ? node->right != NULL : false);
 }
 
 STATIC INLINE CTreeNode* __left(CTreeNode* node)

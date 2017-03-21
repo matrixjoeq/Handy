@@ -10,13 +10,13 @@ static const __rb_tree_color_type s_rb_tree_color_black = true;
 STATIC INLINE bool __is_header(CTreeNode* node)
 {
     return (node ? (node->parent->parent == node &&
-					node->color == s_rb_tree_color_red) : false);
+                    node->color == s_rb_tree_color_red) : false);
 }
 
 STATIC INLINE bool __is_root(CTreeNode* node)
 {
     return (node ? (node->parent->parent == node &&
-				    node->color == s_rb_tree_color_black) : false);
+                    node->color == s_rb_tree_color_black) : false);
 }
 
 STATIC INLINE bool __is_left(CTreeNode* node)
@@ -30,8 +30,8 @@ STATIC INLINE bool __is_right(CTreeNode* node)
 }
 
 STATIC INLINE bool __is_black(CTreeNode* node)
-{ 
-	return (node ? (node->color == s_rb_tree_color_black) : true);
+{
+    return (node ? (node->color == s_rb_tree_color_black) : true);
 }
 
 STATIC INLINE bool __is_red(CTreeNode* node)
@@ -41,12 +41,12 @@ STATIC INLINE bool __is_red(CTreeNode* node)
 
 STATIC INLINE bool __has_left(CTreeNode* node)
 {
-	return (node ? node->left != NULL : false);
+    return (node ? node->left != NULL : false);
 }
 
 STATIC INLINE bool __has_right(CTreeNode* node)
 {
-	return (node ? node->right != NULL : false);
+    return (node ? node->right != NULL : false);
 }
 
 STATIC INLINE CTreeNode* __left(CTreeNode* node)
@@ -100,6 +100,21 @@ STATIC INLINE CTreeNode* __rightmost(CTree* tree)
     return tree->header->right;
 }
 
+STATIC INLINE void __set_root(CTree* tree, CTreeNode* root)
+{
+    tree->header->parent = root;
+}
+
+STATIC INLINE void __set_leftmost(CTree* tree, CTreeNode* leftmost)
+{
+    tree->header->left = leftmost;
+}
+
+STATIC INLINE void __set_rightmost(CTree* tree, CTreeNode* rightmost)
+{
+    tree->header->right = rightmost;
+}
+
 STATIC CTreeNode* __minimum(CTreeNode* node)
 {
     if (!node) {
@@ -125,7 +140,7 @@ STATIC CTreeNode* __maximum(CTreeNode* node)
 
     return node;
 }
-
+#if 0
 STATIC void __rotate_right(CTreeNode* node, CTreeNode* root)
 {
     if (!node || !node->left) {
@@ -183,7 +198,7 @@ STATIC void __rotate_left(CTreeNode* node, CTreeNode* root)
     y->left = x;
     x->parent = y;
 }
-
+#endif
 STATIC bool __key_compare(CReferencePtr lhs, CReferencePtr rhs)
 {
     return (lhs < rhs);
@@ -224,7 +239,7 @@ STATIC void __erase(CTreeNode* node) // erase node and it's children
         node = left;
     }
 }
-
+#if 0
 STATIC void __rebalance_insert(CTree* tree, CTreeNode* node)
 {
     if (!tree || !node) {
@@ -272,43 +287,41 @@ STATIC void __rebalance_insert(CTree* tree, CTreeNode* node)
 
     __root(tree)->color = s_rb_tree_color_black;
 }
-
-STATIC CTreeNode* __insert(CTree* tree, CTreeNode* node, CTreeNode* parent, CReferencePtr data)
+#endif
+STATIC CTreeNode* __insert(CTree* tree, CTreeNode* parent, CReferencePtr data)
 {
-    assert(!node);
-
-    CTreeNode* new_node = NULL;
-    if (!__create_node(&new_node, data)) {
+    CTreeNode* node = NULL;
+    if (!__create_node(&node, data)) {
         return NULL;
     }
 
     CCompare key_compare = tree->key_compare;
     CTreeNode* header = tree->header;
     if (parent == tree->header || key_compare(data, parent->data)) {
-        parent->left = new_node;
+        parent->left = node;
 
         if (parent == header) {
-            header->parent = new_node;
-            header->right = new_node;
+            header->parent = node;
+            header->right = node;
         }
         else if (parent == __leftmost(tree)) {
-            header->left = new_node;
+            header->left = node;
         }
     }
     else {
-        parent->right = new_node;
+        parent->right = node;
 
         if (parent == __rightmost(tree)) {
-            header->right = new_node;
+            header->right = node;
         }
     }
 
-    new_node->parent = parent;
+    node->parent = parent;
 
-    __rebalance_insert(tree, new_node);
+    //__rebalance_insert(tree, node);
     ++(tree->node_count);
 
-    return new_node;
+    return node;
 }
 
 CTree* CTREE_CreateTree(CTree** tree, CCompare comp)
@@ -441,7 +454,7 @@ CTreeNode* CTREE_InsertEqual(CTree* tree, CReferencePtr data)
         x = key_compare(data, x->data) ? x->left : x->right;
     }
 
-    return __insert(tree, x, y, data);
+    return __insert(tree, y, data);
 }
 
 CTreeNode* CTREE_InsertUnique(CTree* tree, CReferencePtr data)
@@ -463,7 +476,7 @@ CTreeNode* CTREE_InsertUnique(CTree* tree, CReferencePtr data)
     CTreeNode* z = y;
     if (comp) {
         if (z == CTREE_Begin(tree)) {
-            return __insert(tree, x, y, data);
+            return __insert(tree, y, data);
         }
         else {
             CTREE_Backward(&z);
@@ -471,7 +484,7 @@ CTreeNode* CTREE_InsertUnique(CTree* tree, CReferencePtr data)
     }
 
     if (key_compare(z->data, data)) {
-        return __insert(tree, x, y, data);
+        return __insert(tree, y, data);
     }
 
     return NULL;
@@ -479,8 +492,88 @@ CTreeNode* CTREE_InsertUnique(CTree* tree, CReferencePtr data)
 
 void CTREE_Erase(CTree* tree, CTreeNode* node)
 {
-    UNUSE(tree);
-    UNUSE(node);
+    if (!tree || !node) {
+        return;
+    }
+
+    CTreeNode* erase_node = node;
+    CTreeNode* replace_node = NULL;
+    if (!__has_left(erase_node)) {
+        // erase_node has right child or no child
+        // replace_node may be null
+        replace_node = __right(erase_node);
+    }
+    else {
+        if (!__has_right(erase_node)) {
+            // erase_node has left child
+            replace_node = __left(erase_node);
+            assert(replace_node);
+        }
+        else {
+            // erase_node has both children
+            // replace_node may be null
+            erase_node = __minimum(__right(erase_node));
+            replace_node = __right(erase_node);
+        }
+    }
+    assert(erase_node);
+
+    if (erase_node == node) { // replace erase_node with replace_node
+        if (__root(tree) == erase_node) {
+            __set_root(tree, replace_node);
+        }
+        else {
+            if (__is_left(erase_node)) {
+                __parent(erase_node)->left = replace_node;
+            }
+            else {
+                __parent(erase_node)->right = replace_node;
+            }
+        }
+
+        if (__leftmost(tree) == erase_node) {
+            __set_leftmost(tree, replace_node ? __minimum(replace_node)
+                                              : __parent(erase_node));
+        }
+
+        if (__rightmost(tree) == erase_node) {
+            __set_rightmost(tree, replace_node ? __maximum(replace_node)
+                                               : __parent(erase_node));
+        }
+
+        if (replace_node) {
+            replace_node->parent = __parent(erase_node);
+        }
+    }
+    else { // erase_node is node's successor
+        if (__root(tree) == node) {
+            __set_root(tree, erase_node);
+        }
+        else {
+            if (__is_left(node)) {
+                __parent(node)->left = erase_node;
+            }
+            else {
+                __parent(node)->right = erase_node;
+            }
+        }
+
+        erase_node->left = __left(node);
+        __left(node)->parent = erase_node;
+        if (erase_node != __right(node)) {
+            erase_node->right = __right(node);
+            __right(node)->parent = erase_node;
+            __parent(erase_node)->left = replace_node;
+            if (replace_node) {
+                replace_node->parent = __parent(erase_node);
+            }
+        }
+
+        erase_node->parent = __parent(node);
+        erase_node = node;
+    }
+
+    __destroy_node(erase_node);
 }
 
 void CTREE_Clear(CTree* tree)

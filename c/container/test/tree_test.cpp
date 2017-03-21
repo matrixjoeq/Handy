@@ -63,6 +63,17 @@ bool Less(CReferencePtr lhs, CReferencePtr rhs)
 class CTreeTestUnique : public TestWithParam<struct Param> {};
 class CTreeTestEqual : public TestWithParam<struct Param> {};
 
+template <typename T>
+static void traverse(CTree* tree)
+{
+    for (CTreeNode* it = CTREE_Begin(tree); it != CTREE_End(tree); CTREE_Forward(&it)) {
+        CReferencePtr ref = CTREE_Reference(it);
+        T* data = reinterpret_cast<T*>(ref);
+        printf("%d ", *data);
+    }
+    printf("\n");
+}
+
 TEST(CTreeTest, CreateDestroy)
 {
     CTree* tree = nullptr;
@@ -91,6 +102,31 @@ TEST(CTreeTest, Clear)
     CTREE_Clear(tree);
     EXPECT_TRUE(CTREE_Empty(tree));
     EXPECT_EQ(CTREE_Size(tree), 0);
+
+    DESTROY_TREE(tree);
+}
+
+TEST(CTreeTest, Erase)
+{
+    const int numbers[] = { 4, 1, 7, 0, 3, 6, 8, 2, 5, 9 };
+
+    CREATE_TREE(tree);
+    ARRAY_FOREACH(numbers, i) {
+        CREATE_DATA(num, int, numbers[i]);
+        CTREE_InsertUnique(tree, num);
+    }
+    EXPECT_EQ(CTREE_Size(tree), ARRAY_LENGTH(numbers));
+
+    int removes[] = { 0, 3, 8, 7, 4, 5, 6, 9, 1, 2 };
+    ARRAY_FOREACH(removes, i) {
+        CTreeNode* found = CTREE_Find(tree, &removes[i]);
+        EXPECT_NE(found, CTREE_End(tree));
+        CTREE_Erase(tree, found);
+        found = CTREE_Find(tree, &removes[i]);
+        EXPECT_EQ(found, CTREE_End(tree));
+
+        traverse<int>(tree);
+    }
 
     DESTROY_TREE(tree);
 }

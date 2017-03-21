@@ -19,6 +19,11 @@ typedef bool (*CUnaryPredicate)(CReferencePtr data);
 // return true if lhs < rhs
 typedef bool (*CCompare)(CReferencePtr lhs, CReferencePtr rhs);
 
+typedef struct __c_iterator {
+    void (*increment)(struct __c_iterator*);
+    void (*decrement)(struct __c_iterator*);
+} CIterator;
+
 // general macro
 #define FREE(x) \
     do { \

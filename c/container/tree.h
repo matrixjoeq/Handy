@@ -10,21 +10,11 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef bool __rb_tree_color_type;
+struct __c_tree_node;
+typedef struct __c_tree_node CTreeNode;
 
-typedef struct __c_tree_node {
-    struct __c_tree_node* parent;
-    struct __c_tree_node* left;
-    struct __c_tree_node* right;
-    CReferencePtr data;
-    __rb_tree_color_type color;
-} CTreeNode;
-
-typedef struct __c_tree {
-    CCompare key_compare;
-    CTreeNode* header;
-    size_t node_count;
-} CTree;
+struct __c_tree;
+typedef struct __c_tree CTree;
 
 /**
  * constructor/destructor

@@ -1,7 +1,12 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include "list.h"
 #include "queue.h"
+
+struct __c_queue {
+    CList* sequence;
+};
 
 CQueue* CQUEUE_CreateQueue(CQueue** queue)
 {

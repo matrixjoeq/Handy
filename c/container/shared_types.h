@@ -11,13 +11,14 @@
 #endif
 
 typedef void* CReferencePtr;
-typedef void (*CUnaryFunction)(CReferencePtr data);
+typedef void (*CUnaryFunction)(CReferencePtr);
 
 // return true if data matches condition
-typedef bool (*CUnaryPredicate)(CReferencePtr data);
+typedef bool (*CUnaryPredicate)(CReferencePtr);
+typedef bool (*CBinaryPredicate)(CReferencePtr, CReferencePtr);
 
 // return true if lhs < rhs
-typedef bool (*CCompare)(CReferencePtr lhs, CReferencePtr rhs);
+typedef bool (*CCompare)(CReferencePtr, CReferencePtr);
 
 typedef struct __c_iterator {
     void (*increment)(struct __c_iterator*);

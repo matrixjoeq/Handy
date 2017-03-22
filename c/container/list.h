@@ -11,16 +11,11 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef struct __c_list_node {
-    struct __c_list_node* prev;
-    struct __c_list_node* next;
-    CReferencePtr data;
-} CListNode;
+struct __c_list_node;
+typedef struct __c_list_node CListNode;
 
-typedef struct __c_list {
-    CListNode* node;
-    CCompare compare;
-} CList;
+struct __c_list;
+typedef struct __c_list CList;
 
 /**
  * constructor/destructor
@@ -48,6 +43,7 @@ void CLIST_Backward(CListNode** node);
  */
 bool CLIST_Empty(CList* list);
 size_t CLIST_Size(CList* list);
+size_t CLIST_MaxSize(void);
 
 /**
  * modifiers
@@ -64,6 +60,9 @@ void CLIST_Erase(CList* list, CListNode* pos);
  */
 void CLIST_Remove(CList* list, CReferencePtr data);
 void CLIST_RemoveIf(CList* list, CUnaryPredicate pred);
+void CLIST_Sort(CList* list, CCompare comp);
+void CLIST_Reverse(CList* list);
+void CLIST_Unique(CList* list, CBinaryPredicate pred);
 
 /**
  * algorithms

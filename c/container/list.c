@@ -4,7 +4,18 @@
 #include <assert.h>
 #include "list.h"
 
-STATIC CListNode* __createNode(CListNode** node, CReferencePtr data)
+struct __c_list_node {
+    struct __c_list_node* prev;
+    struct __c_list_node* next;
+    CReferencePtr data;
+};
+
+struct __c_list {
+    CListNode* node;
+    CCompare compare;
+};
+
+STATIC CListNode* __create_node(CListNode** node, CReferencePtr data)
 {
     if (!node || *node) {
         return NULL;
@@ -22,7 +33,7 @@ STATIC CListNode* __createNode(CListNode** node, CReferencePtr data)
     return *node;
 }
 
-STATIC void __popNode(CListNode* node)
+STATIC void __pop_node(CListNode* node)
 {
     if (!node) {
         return;
@@ -34,11 +45,24 @@ STATIC void __popNode(CListNode* node)
     FREE(node);
 }
 
+STATIC INLINE CListNode* __decrement(CListNode* node)
+{
+    return node->prev;
+}
+
+STATIC INLINE CListNode* __increment(CListNode* node)
+{
+    return node->next;
+}
+
 STATIC bool __compare(CReferencePtr lhs, CReferencePtr rhs)
 {
     return (lhs < rhs);
 }
 
+/**
+ * constructor/destructor
+ */
 CList* CLIST_CreateList(CList** list, CCompare comp)
 {
     if (!list || *list) {
@@ -51,7 +75,7 @@ CList* CLIST_CreateList(CList** list, CCompare comp)
     }
 
     (*list)->node = NULL;
-    if (!__createNode(&((*list)->node), NULL)) {
+    if (!__create_node(&((*list)->node), NULL)) {
         FREE(*list);
         return NULL;
     }
@@ -85,6 +109,9 @@ void CLIST_DestroyList(CList* list)
     return;
 }
 
+/**
+ * element access
+ */
 CReferencePtr CLIST_Front(CList* list)
 {
     if (CLIST_Empty(list)) {
@@ -108,6 +135,9 @@ CReferencePtr CLIST_Reference(CListNode* node)
     return node ? node->data : NULL;
 }
 
+/**
+ * iterators
+ */
 CListNode* CLIST_Begin(CList* list)
 {
     return list ? list->node->next : NULL;
@@ -136,6 +166,9 @@ void CLIST_Backward(CListNode** node)
     *node = (*node)->prev;
 }
 
+/**
+ * capacity
+ */
 bool CLIST_Empty(CList* list)
 {
     return list ? CLIST_Begin(list) == CLIST_End(list) : true;
@@ -154,6 +187,14 @@ size_t CLIST_Size(CList *list)
     return size;
 }
 
+size_t CLIST_MaxSize(void)
+{
+    return (-1);
+}
+
+/**
+ * modifiers
+ */
 void CLIST_PushBack(CList* list, CReferencePtr data)
 {
     if (!list || !data) {
@@ -161,7 +202,7 @@ void CLIST_PushBack(CList* list, CReferencePtr data)
     }
 
     CListNode* node = NULL;
-    if (!__createNode(&node, data)) {
+    if (!__create_node(&node, data)) {
         return;
     }
 
@@ -177,7 +218,7 @@ void CLIST_PopBack(CList* list)
         return;
     }
 
-    __popNode(list->node->prev);
+    __pop_node(list->node->prev);
 }
 
 void CLIST_PushFront(CList* list, CReferencePtr data)
@@ -187,7 +228,7 @@ void CLIST_PushFront(CList* list, CReferencePtr data)
     }
 
     CListNode* node = NULL;
-    if (!__createNode(&node, data)) {
+    if (!__create_node(&node, data)) {
         return;
     }
 
@@ -203,7 +244,7 @@ void CLIST_PopFront(CList* list)
         return;
     }
 
-    __popNode(list->node->next);
+    __pop_node(list->node->next);
 }
 
 CListNode* CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data)
@@ -213,7 +254,7 @@ CListNode* CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data)
     }
 
     CListNode* node = NULL;
-    if (!__createNode(&node, data)) {
+    if (!__create_node(&node, data)) {
         return NULL;
     }
 
@@ -231,14 +272,17 @@ void CLIST_Erase(CList* list, CListNode* pos)
         return;
     }
 
-    __popNode(pos);
+    __pop_node(pos);
 }
 
+/**
+ * operations
+ */
 void CLIST_Remove(CList* list, CReferencePtr data)
 {
     CListNode* node = CLIST_Find(list, data);
     while (node != CLIST_End(list)) {
-        __popNode(node);
+        __pop_node(node);
         node = CLIST_Find(list, data);
     }
 }
@@ -247,11 +291,86 @@ void CLIST_RemoveIf(CList* list, CUnaryPredicate pred)
 {
     CListNode* node = CLIST_FindIf(list, pred);
     while (node != CLIST_End(list)) {
-        __popNode(node);
+        __pop_node(node);
         node = CLIST_FindIf(list, pred);
     }
 }
 
+void CLIST_Sort(CList* list, CCompare comp)
+{
+    if (CLIST_Empty(list) || CLIST_Size(list) == 1) {
+        return;
+    }
+
+    /*
+    INSERT-SORT(A):
+    for (i=1; i<length(A); ++i) {
+        key=A[i]; // key is the value to be inserted
+        j=i-1;
+        while (j>=0 && key<A[j]) {
+            // sort in low priority order
+            // >A[j], sort in high priority order
+            A[j+1]=A[j];
+            --j;
+        }
+        A[j+1]=key;
+    }
+    */
+    CCompare compare = comp ? comp : list->compare;
+    // start from the second element
+    for (CListNode* i = list->node->next->next; i != list->node; i = i->next) {
+        CReferencePtr key = i->data;
+        CListNode* j = i->prev;
+        while (j != list->node && compare(key, j->data)) {
+            j->next->data = j->data;
+            j = j->prev;
+        }
+        j->next->data = key;
+    }
+}
+
+void CLIST_Reverse(CList* list)
+{
+    if (CLIST_Empty(list) || CLIST_Size(list) == 1) {
+        return;
+    }
+
+    CListNode* x = list->node->next;
+    CListNode* y = NULL;
+    while (x != list->node) {
+        y = x->next;
+        x->next = x->prev;
+        x->prev = y;
+        x = y;
+    }
+
+    y = list->node->next;
+    list->node->next = list->node->prev;
+    list->node->prev = y;
+}
+
+void CLIST_Unique(CList* list, CBinaryPredicate pred)
+{
+    if (CLIST_Empty(list) || CLIST_Size(list) == 1 || !pred) {
+        return;
+    }
+
+    CListNode* x = list->node->next;
+    CListNode* y = NULL;
+    while (x != list->node && x->next != list->node) {
+        y = x->next;
+        if (pred(x->data, y->data)) {
+            x->next = y->next;
+            y->next->prev = x;
+            __pop_node(y);
+        }
+        x = x->next;
+    }
+}
+
+/**
+ * algorithms
+ */
 CListNode* CLIST_Find(CList* list, CReferencePtr data)
 {
     if (CLIST_Empty(list) || !data) {

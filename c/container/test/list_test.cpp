@@ -26,7 +26,10 @@ struct Param {
 
 const Param params[] = {
     { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-    { 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 }
+    { 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 },
+    { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 },
+    { 9, 9, 8, 7, 7, 7, 6, 5, 4, 3 },
+    { 8, 2, 5, 7, 0, 1, 4, 6, 3, 9 },
 };
 
 template<typename T, int N>
@@ -47,10 +50,30 @@ bool Less(CReferencePtr lhs, CReferencePtr rhs)
 }
 
 template<typename T>
-void Do(CReferencePtr data)
+bool Greater(CReferencePtr lhs, CReferencePtr rhs)
+{
+    T* lhs_ = reinterpret_cast<T*>(lhs);
+    T* rhs_ = reinterpret_cast<T*>(rhs);
+
+    return (*lhs_ > *rhs_);
+}
+
+template<typename T>
+void PlusOne(CReferencePtr data)
 {
     T* data_ = reinterpret_cast<T*>(data);
     ++(*data_);
+}
+
+template <typename T>
+void traverse(CList* list)
+{
+    for (CListNode* it = CLIST_Begin(list); it != CLIST_End(list); CLIST_Forward(&it)) {
+        CReferencePtr ref = CLIST_Reference(it);
+        T* data = reinterpret_cast<T*>(ref);
+        printf("%d ", *data);
+    }
+    printf("\n");
 }
 
 class CListTestModifier : public TestWithParam<struct Param> {};
@@ -210,6 +233,50 @@ TEST_P(CListTestOperation, RemoveIf)
     DESTROY_LIST(list);
 }
 
+TEST_P(CListTestOperation, Sort)
+{
+    Param param = GetParam();
+    CREATE_LIST(list);
+
+    ARRAY_FOREACH(param.numbers, i) {
+        CREATE_DATA(num, int, param.numbers[i]);
+        CLIST_PushBack(list, num);
+    }
+
+    printf("original list: ");
+    traverse<int>(list);
+
+    printf("ascending sort: ");
+    CLIST_Sort(list, NULL);
+    traverse<int>(list);
+
+    printf("descending sort: ");
+    CLIST_Sort(list, Greater<int>);
+    traverse<int>(list);
+
+    DESTROY_LIST(list);
+}
+
+TEST_P(CListTestOperation, Reverse)
+{
+    Param param = GetParam();
+    CREATE_LIST(list);
+
+    ARRAY_FOREACH(param.numbers, i) {
+        CREATE_DATA(num, int, param.numbers[i]);
+        CLIST_PushBack(list, num);
+    }
+
+    printf("original list: ");
+    traverse<int>(list);
+
+    printf("reverse list: ");
+    CLIST_Reverse(list);
+    traverse<int>(list);
+
+    DESTROY_LIST(list);
+}
+
 TEST_P(CListTestAlgorithm, Find)
 {
     Param param = GetParam();
@@ -252,7 +319,7 @@ TEST_P(CListTestAlgorithm, ForEach)
         CLIST_PushBack(list, num);
     }
 
-    CLIST_ForEach(CLIST_Begin(list), CLIST_End(list), Do<int>);
+    CLIST_ForEach(CLIST_Begin(list), CLIST_End(list), PlusOne<int>);
 
     DESTROY_LIST(list);
 }

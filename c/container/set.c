@@ -3,9 +3,13 @@
 #include <assert.h>
 #include "set.h"
 
+struct __c_set {
+    CTree* repr;
+};
+
 CSet* CSET_CreateSet(CSet** set, CCompare comp)
 {
-	if (!set || *set) {
+    if (!set || *set) {
         return NULL;
     }
 
@@ -14,82 +18,92 @@ CSet* CSET_CreateSet(CSet** set, CCompare comp)
         return NULL;
     }
 
+    (*set)->repr = NULL;
     if (!CTREE_CreateTree(&((*set)->repr), comp)) {
-		FREE(*set);
-		return NULL;
-	}
+        FREE(*set);
+        return NULL;
+    }
 
     return *set;
 }
 
 void CSET_DestroySet(CSet* set)
 {
-	if (set) {
-		CTREE_DestroyTree(set->repr);
-		FREE(set);
-	}
+    if (set) {
+        CTREE_DestroyTree(set->repr);
+        FREE(set);
+    }
 }
 
-CReferencePtr CSET_Reference(CSetIterator* it)
+CReferencePtr CSET_Reference(CSetIterator it)
 {
-	return (it ? CTREE_Reference((CTreeNode*)it) : NULL);
+    return (it ? CTREE_Reference((CTreeNode*)it) : NULL);
 }
 
-CSetIterator* CSET_Begin(CSet* set)
+CSetIterator CSET_Begin(CSet* set)
 {
-	return (set ? (CSetIterator*)CTREE_Begin(set->repr) : NULL);
+    return (set ? (CSetIterator)CTREE_Begin(set->repr) : NULL);
 }
 
-CSetIterator* CSET_End(CSet* set)
+CSetIterator CSET_End(CSet* set)
 {
-	return (set ? (CSetIterator*)CTREE_End(set->repr) : NULL);
+    return (set ? (CSetIterator)CTREE_End(set->repr) : NULL);
 }
 
-void CSET_Forward(CSetIterator** it)
+void CSET_Forward(CSetIterator* it)
 {
-	CTREE_Forward((CTreeNode**)it);
+    CTREE_Forward((CTreeNode**)it);
 }
 
-void CSET_Backward(CSetIterator** it)
+void CSET_Backward(CSetIterator* it)
 {
-	CTREE_Backward((CTreeNode**)it);
+    CTREE_Backward((CTreeNode**)it);
 }
 
 bool CSET_Empty(CSet* set)
 {
-	return (set ? CTREE_Empty(set->repr) : true);
+    return (set ? CTREE_Empty(set->repr) : true);
 }
 
 size_t CSET_Size(CSet* set)
 {
-	return (set ? CTREE_Size(set->repr) : 0);
+    return (set ? CTREE_Size(set->repr) : 0);
 }
 
 size_t CSET_MaxSize(void)
 {
-	return CTREE_MaxSize();
+    return CTREE_MaxSize();
 }
 
-CSetIterator* CSET_Insert(CSet* set, CReferencePtr data)
+CSetIterator CSET_Insert(CSet* set, CReferencePtr data)
 {
-	return (set ? (CSetIterator*)CTREE_InsertUnique(set->repr, data) : NULL);
+    if (!set || !data) {
+        return NULL;
+    }
+
+    CSetIterator iter = (CSetIterator)CTREE_Find(set->repr, data);
+    if (iter != (CSetIterator)CTREE_End(set->repr)) {
+        return iter;
+    }
+
+    return (CSetIterator)CTREE_InsertUnique(set->repr, data);
 }
 
-void CSET_Erase(CSet* set, CSetIterator* it)
+void CSET_Erase(CSet* set, CSetIterator it)
 {
-	if (set && it) {
-		CTREE_Erase(set->repr, (CTreeNode*)it);
-	}
+    if (set && it) {
+        CTREE_Erase(set->repr, (CTreeNode*)it);
+    }
 }
 
 void CSET_Clear(CSet* set)
 {
-	if (set) {
-		CTREE_Clear(set->repr);
-	}
+    if (set) {
+        CTREE_Clear(set->repr);
+    }
 }
 
-CSetIterator* CSET_Find(CSet* set, CReferencePtr data)
+CSetIterator CSET_Find(CSet* set, CReferencePtr data)
 {
-	return (set ? (CSetIterator*)CTREE_Find(set->repr, data) : CSET_End(set));
+    return (set ? (CSetIterator)CTREE_Find(set->repr, data) : CSET_End(set));
 }

@@ -4,6 +4,22 @@
 #include <assert.h>
 #include "tree.h"
 
+typedef bool __rb_tree_color_type;
+
+struct __c_tree_node {
+    struct __c_tree_node* parent;
+    struct __c_tree_node* left;
+    struct __c_tree_node* right;
+    CReferencePtr data;
+    __rb_tree_color_type color;
+};
+
+struct __c_tree {
+    CCompare key_compare;
+    CTreeNode* header;
+    size_t node_count;
+};
+
 static const __rb_tree_color_type s_rb_tree_color_red = false;
 static const __rb_tree_color_type s_rb_tree_color_black = true;
 

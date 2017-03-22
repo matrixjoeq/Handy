@@ -11,11 +11,11 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef CTreeNode CSetIterator;
+typedef CTreeNode* CSetIterator;
 
-typedef struct __c_set {
-	CTree* repr;
-} CSet;
+struct __c_set;
+typedef struct __c_set CSet;
+
 
 /**
  * constructor/destructor
@@ -26,15 +26,15 @@ void CSET_DestroySet(CSet* set);
 /**
  * element access
  */
-CReferencePtr CSET_Reference(CSetIterator* it);
+CReferencePtr CSET_Reference(CSetIterator it);
 
 /**
  * iterators
  */
-CSetIterator* CSET_Begin(CSet* set);
-CSetIterator* CSET_End(CSet* set);
-void CSET_Forward(CSetIterator** it);
-void CSET_Backward(CSetIterator** it);
+CSetIterator CSET_Begin(CSet* set);
+CSetIterator CSET_End(CSet* set);
+void CSET_Forward(CSetIterator* it);
+void CSET_Backward(CSetIterator* it);
 
 /**
  * capacity
@@ -46,14 +46,14 @@ size_t CSET_MaxSize(void);
 /**
  * modifiers
  */
-CSetIterator* CSET_Insert(CSet* set, CReferencePtr data);
-void CSET_Erase(CSet* set, CSetIterator* it);
+CSetIterator CSET_Insert(CSet* set, CReferencePtr data);
+void CSET_Erase(CSet* set, CSetIterator it);
 void CSET_Clear(CSet* set);
 
 /**
  * algorithms
  */
-CSetIterator* CSET_Find(CSet* set, CReferencePtr data);
+CSetIterator CSET_Find(CSet* set, CReferencePtr data);
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,12 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include "list.h"
 #include "stack.h"
+
+struct __c_stack {
+    CList* sequence;
+};
 
 CStack* CSTACK_CreateStack(CStack** stack)
 {

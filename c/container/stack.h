@@ -4,15 +4,13 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "list.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-typedef struct __c_stack {
-    CList* sequence;
-} CStack;
+struct __c_stack;
+typedef struct __c_stack CStack;
 
 /**
  * constructor/destructor

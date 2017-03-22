@@ -64,7 +64,7 @@ class CTreeTestUnique : public TestWithParam<struct Param> {};
 class CTreeTestEqual : public TestWithParam<struct Param> {};
 
 template <typename T>
-static void traverse(CTree* tree)
+void traverse(CTree* tree)
 {
     for (CTreeNode* it = CTREE_Begin(tree); it != CTREE_End(tree); CTREE_Forward(&it)) {
         CReferencePtr ref = CTREE_Reference(it);
@@ -138,11 +138,12 @@ TEST_P(CTreeTestUnique, InsertErase)
 
     ARRAY_FOREACH(param.numbers, i) {
         CREATE_DATA(num, int, param.numbers[i]);
-        CTREE_InsertUnique(tree, num);
+        CTreeNode* node = CTREE_InsertUnique(tree, num);
+        EXPECT_TRUE(node != NULL);
         EXPECT_FALSE(CTREE_Empty(tree));
         EXPECT_EQ(CTREE_Size(tree), i + 1);
         CTreeNode* found = CTREE_Find(tree, &param.numbers[i]);
-        EXPECT_NE(CTREE_End(tree), found);
+        EXPECT_EQ(found, node);
         int* number_found = reinterpret_cast<int*>(CTREE_Reference(found));
         EXPECT_EQ(param.numbers[i], *number_found);
     }

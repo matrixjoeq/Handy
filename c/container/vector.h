@@ -10,11 +10,8 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef struct __c_vector {
-    CReferencePtr start;
-    CReferencePtr finish;
-    CReferencePtr end_of_storage;
-} CVector;
+struct __c_vector;
+typedef struct __c_vector CVector;
 
 
 #ifdef __cplusplus

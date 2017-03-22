@@ -5,15 +5,12 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "vector.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-typedef struct __c_deque {
-    CVector* sequence;
-} CDeque;
+typedef struct __c_deque CDeque;
 
 /**
  * constructor/destructor

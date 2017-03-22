@@ -5,15 +5,12 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "list.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-typedef struct __c_queue {
-    CList* sequence;
-} CQueue;
+typedef struct __c_queue CQueue;
 
 /**
  * constructor/destructor

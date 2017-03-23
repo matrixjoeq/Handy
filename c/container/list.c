@@ -11,9 +11,11 @@ struct __c_list_node {
 };
 
 struct __c_list {
-    CListNode* node;
+    struct __c_list_node* node;
     CCompare compare;
 };
+
+typedef struct __c_list_node CListNode;
 
 STATIC CListNode* __create_node(CListNode** node, CReferencePtr data)
 {
@@ -33,24 +35,27 @@ STATIC CListNode* __create_node(CListNode** node, CReferencePtr data)
     return *node;
 }
 
-STATIC void __pop_node(CListNode* node)
+STATIC CListNode* __pop_node(CListNode* node)
 {
-    if (!node) {
-        return;
-    }
+    assert(node);
 
-    node->next->prev = node->prev;
-    node->prev->next = node->next;
+    CListNode* next_node = node->next;
+    CListNode* prev_node = node->prev;
+
+    next_node->prev = prev_node;
+    prev_node->next = next_node;
     FREE(node->data);
     FREE(node);
+
+    return next_node;
 }
 
-STATIC INLINE CListNode* __decrement(CListNode* node)
+STATIC INLINE CListIterator __decrement(CListIterator node)
 {
     return node->prev;
 }
 
-STATIC INLINE CListNode* __increment(CListNode* node)
+STATIC INLINE CListIterator __increment(CListIterator node)
 {
     return node->next;
 }
@@ -93,17 +98,18 @@ void CLIST_DestroyList(CList* list)
         return;
     }
 
-    for (CListNode* node = list->node->next;
-         node != list->node;
-         ) {
-        assert(node);
-        CListNode* tmp = node->next;
-        FREE(node->data);
-        FREE(node);
-        node = tmp;
+    CListNode* first = list->node->next;
+    CListNode* last = list->node;
+    CListNode* next = NULL;
+    while (first != last) {
+        assert(first);
+        next = first->next;
+        FREE(first->data);
+        FREE(first);
+        first = next;
     }
 
-    FREE(list->node);
+    FREE(last);
     FREE(list);
 
     return;
@@ -130,40 +136,40 @@ CReferencePtr CLIST_Back(CList* list)
     return list->node->prev->data;
 }
 
-CReferencePtr CLIST_Reference(CListNode* node)
+CReferencePtr CLIST_Reference(CListIterator iter)
 {
-    return node ? node->data : NULL;
+    return iter ? iter->data : NULL;
 }
 
 /**
  * iterators
  */
-CListNode* CLIST_Begin(CList* list)
+CListIterator CLIST_Begin(CList* list)
 {
-    return list ? list->node->next : NULL;
+    return (list ? list->node->next : NULL);
 }
 
-CListNode* CLIST_End(CList* list)
+CListIterator CLIST_End(CList* list)
 {
-    return list ? list->node : NULL;
+    return (list ? list->node : NULL);
 }
 
-void CLIST_Forward(CListNode** node)
+void CLIST_Forward(CListIterator* iter)
 {
-    if (!node || !(*node)) {
+    if (!iter || !(*iter)) {
         return;
     }
 
-    *node = (*node)->next;
+    *iter = (*iter)->next;
 }
 
-void CLIST_Backward(CListNode** node)
+void CLIST_Backward(CListIterator* iter)
 {
-    if (!node || !(*node)) {
+    if (!iter || !(*iter)) {
         return;
     }
 
-    *node = (*node)->prev;
+    *iter = (*iter)->prev;
 }
 
 /**
@@ -177,10 +183,10 @@ bool CLIST_Empty(CList* list)
 size_t CLIST_Size(CList *list)
 {
     size_t size = 0;
-    for (CListNode* node = CLIST_Begin(list);
-         node != CLIST_End(list);
-         node = node->next) {
-        assert(node);
+    for (CListIterator iter = CLIST_Begin(list);
+         iter != CLIST_End(list);
+         CLIST_Forward(&iter)) {
+        assert(iter);
         ++size;
     }
 
@@ -247,7 +253,7 @@ void CLIST_PopFront(CList* list)
     __pop_node(list->node->next);
 }
 
-CListNode* CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data)
+CListIterator CLIST_Insert(CList* list, CListIterator pos, CReferencePtr data)
 {
     if (!list || !pos || !data) {
         return NULL;
@@ -263,16 +269,16 @@ CListNode* CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data)
     pos->prev->next = node;
     pos->prev = node;
 
-    return node;
+    return (CListIterator)node;
 }
 
-void CLIST_Erase(CList* list, CListNode* pos)
+CListIterator CLIST_Erase(CList* list, CListIterator pos)
 {
     if (!list || !pos) {
-        return;
+        return NULL;
     }
 
-    __pop_node(pos);
+    return (CListIterator)__pop_node((CListNode*)pos);
 }
 
 /**
@@ -280,19 +286,19 @@ void CLIST_Erase(CList* list, CListNode* pos)
  */
 void CLIST_Remove(CList* list, CReferencePtr data)
 {
-    CListNode* node = CLIST_Find(list, data);
-    while (node != CLIST_End(list)) {
-        __pop_node(node);
-        node = CLIST_Find(list, data);
+    CListIterator iter = CLIST_Find(list, data);
+    while (iter != CLIST_End(list)) {
+        __pop_node(iter);
+        iter = CLIST_Find(list, data);
     }
 }
 
 void CLIST_RemoveIf(CList* list, CUnaryPredicate pred)
 {
-    CListNode* node = CLIST_FindIf(list, pred);
-    while (node != CLIST_End(list)) {
-        __pop_node(node);
-        node = CLIST_FindIf(list, pred);
+    CListIterator iter = CLIST_FindIf(list, pred);
+    while (iter != CLIST_End(list)) {
+        __pop_node(iter);
+        iter = CLIST_FindIf(list, pred);
     }
 }
 
@@ -318,9 +324,9 @@ void CLIST_Sort(CList* list, CCompare comp)
     */
     CCompare compare = comp ? comp : list->compare;
     // start from the second element
-    for (CListNode* i = list->node->next->next; i != list->node; i = i->next) {
+    for (CListIterator i = list->node->next->next; i != list->node; i = i->next) {
         CReferencePtr key = i->data;
-        CListNode* j = i->prev;
+        CListIterator j = i->prev;
         while (j != list->node && compare(key, j->data)) {
             j->next->data = j->data;
             j = j->prev;
@@ -335,8 +341,8 @@ void CLIST_Reverse(CList* list)
         return;
     }
 
-    CListNode* x = list->node->next;
-    CListNode* y = NULL;
+    CListIterator x = list->node->next;
+    CListIterator y = NULL;
     while (x != list->node) {
         y = x->next;
         x->next = x->prev;
@@ -355,14 +361,12 @@ void CLIST_Unique(CList* list, CBinaryPredicate pred)
         return;
     }
 
-    CListNode* x = list->node->next;
-    CListNode* y = NULL;
+    CListIterator x = list->node->next;
+    CListIterator y = NULL;
     while (x != list->node && x->next != list->node) {
         y = x->next;
-        if (pred(x->data, y->data)) {
-            x->next = y->next;
-            y->next->prev = x;
-            __pop_node(y);
+        while (y != list->node && pred(x->data, y->data)) {
+            y = __pop_node(y);
         }
         x = x->next;
     }
@@ -371,54 +375,52 @@ void CLIST_Unique(CList* list, CBinaryPredicate pred)
 /**
  * algorithms
  */
-CListNode* CLIST_Find(CList* list, CReferencePtr data)
+CListIterator CLIST_Find(CList* list, CReferencePtr data)
 {
     if (CLIST_Empty(list) || !data) {
         return CLIST_End(list);
     }
 
     CCompare compare = list->compare;
-    for (CListNode* node = CLIST_Begin(list);
-         node != CLIST_End(list);
-         node = node->next) {
-        assert(node);
-        if (!compare(node->data, data) &&
-            !compare(data, node->data)) {
-            return node;
+    for (CListIterator iter = CLIST_Begin(list);
+         iter != CLIST_End(list);
+         CLIST_Forward(&iter)) {
+        assert(iter);
+        if (!compare(iter->data, data) &&
+            !compare(data, iter->data)) {
+            return iter;
         }
     }
 
     return CLIST_End(list);
 }
 
-CListNode* CLIST_FindIf(CList* list, CUnaryPredicate pred)
+CListIterator CLIST_FindIf(CList* list, CUnaryPredicate pred)
 {
     if (CLIST_Empty(list) || !pred) {
         return CLIST_End(list);
     }
 
-    for (CListNode* node = CLIST_Begin(list);
-         node != CLIST_End(list);
-         node = node->next) {
-        assert(node);
-        if (pred(node->data)) {
-            return node;
+    for (CListIterator iter = CLIST_Begin(list);
+         iter != CLIST_End(list);
+         CLIST_Forward(&iter)) {
+        assert(iter);
+        if (pred(iter->data)) {
+            return iter;
         }
     }
 
     return CLIST_End(list);
 }
 
-void CLIST_ForEach(CListNode* first, CListNode* last, CUnaryFunction func)
+void CLIST_ForEach(CListIterator first, CListIterator last, CUnaryFunction func)
 {
     if (!first || !last || !func) {
         return;
     }
 
-    for (CListNode* node = first; node != last; node = node->next) {
-        assert(node);
-        func(node->data);
+    for (CListIterator iter = first; iter != last; CLIST_Forward(&iter)) {
+        assert(iter);
+        func(iter->data);
     }
-
-    return;
 }

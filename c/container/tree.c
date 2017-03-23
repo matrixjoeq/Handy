@@ -91,6 +91,12 @@ STATIC INLINE CTreeNode* __uncle(CTreeNode* node)
                                       : __left(__grand_parent(node)));
 }
 
+STATIC INLINE CTreeNode* __sibling(CTreeNode* node)
+{
+    return (__is_left(node) ? __right(__parent(node))
+                            : __left(__parent(node)));
+}
+
 STATIC INLINE __rb_tree_color_type __color(CTreeNode* node)
 {
     return node->color;
@@ -156,7 +162,7 @@ STATIC CTreeNode* __maximum(CTreeNode* node)
 
     return node;
 }
-#if 0
+
 STATIC void __rotate_right(CTreeNode* node, CTreeNode* root)
 {
     if (!node || !node->left) {
@@ -214,7 +220,7 @@ STATIC void __rotate_left(CTreeNode* node, CTreeNode* root)
     y->left = x;
     x->parent = y;
 }
-#endif
+
 STATIC bool __key_compare(CReferencePtr lhs, CReferencePtr rhs)
 {
     return (lhs < rhs);
@@ -255,7 +261,7 @@ STATIC void __erase(CTreeNode* node) // erase node and it's children
         node = left;
     }
 }
-#if 0
+
 STATIC void __rebalance_insert(CTree* tree, CTreeNode* node)
 {
     if (!tree || !node) {
@@ -303,7 +309,7 @@ STATIC void __rebalance_insert(CTree* tree, CTreeNode* node)
 
     __root(tree)->color = s_rb_tree_color_black;
 }
-#endif
+
 STATIC CTreeNode* __insert(CTree* tree, CTreeNode* parent, CReferencePtr data)
 {
     CTreeNode* node = NULL;
@@ -334,7 +340,7 @@ STATIC CTreeNode* __insert(CTree* tree, CTreeNode* parent, CReferencePtr data)
 
     node->parent = parent;
 
-    //__rebalance_insert(tree, node);
+    __rebalance_insert(tree, node);
     ++(tree->node_count);
 
     return node;
@@ -514,6 +520,7 @@ void CTREE_Erase(CTree* tree, CTreeNode* node)
 
     CTreeNode* erase_node = node;
     CTreeNode* replace_node = NULL;
+    CTreeNode* replace_parent = NULL;
     if (!__has_left(erase_node)) {
         // erase_node has right child or no child
         // replace_node may be null
@@ -560,6 +567,8 @@ void CTREE_Erase(CTree* tree, CTreeNode* node)
         if (replace_node) {
             replace_node->parent = __parent(erase_node);
         }
+
+        replace_parent = __parent(erase_node);
     }
     else { // erase_node is node's successor
         if (__root(tree) == node) {
@@ -583,13 +592,114 @@ void CTREE_Erase(CTree* tree, CTreeNode* node)
             if (replace_node) {
                 replace_node->parent = __parent(erase_node);
             }
+
+            replace_parent = __parent(erase_node);
         }
+        else {
+            replace_parent = erase_node;
+        }
+
+        // swap color of node and node's successor, since node has both children
+        // node's successor will take place of node, change its color to make sure
+        // black node number of the left child of node is not affected
+        __rb_tree_color_type color = erase_node->color;
+        erase_node->color = node->color;
+        node->color = color;
 
         erase_node->parent = __parent(node);
         erase_node = node;
     }
 
+    // rebalance when erase_node is black
+    if (__is_black(erase_node)) {
+        while (replace_node != __root(tree) && __is_black(replace_node)) {
+            if (replace_node) {
+                assert(__parent(replace_node) == replace_parent);
+                assert(__left(replace_parent) == replace_node || __right(replace_parent) == replace_node);
+            }
+
+            // replace_node may be null
+            if (replace_node == __left(replace_parent)) {
+                CTreeNode* replace_sibling = __right(replace_parent);
+                if (__is_red(replace_sibling)) {
+                    replace_sibling->color = s_rb_tree_color_black;
+                    replace_parent->color = s_rb_tree_color_red;
+                    __rotate_left(replace_parent, __root(tree));
+                    replace_sibling = __right(replace_parent);
+                }
+
+                if ((!__has_left(replace_sibling) || __is_black(__left(replace_sibling))) &&
+                    (!__has_right(replace_sibling) || __is_black(__right(replace_sibling)))) {
+                    replace_sibling->color = s_rb_tree_color_red;
+                    replace_node = replace_parent;
+                    replace_parent = __parent(replace_parent);
+                }
+                else {
+                    if (!__has_right(replace_sibling) || __is_black(__right(replace_sibling))) {
+                        if (__has_left(replace_sibling)) {
+                            __left(replace_sibling)->color = s_rb_tree_color_black;
+                        }
+                        replace_sibling->color = s_rb_tree_color_red;
+                        __rotate_right(replace_sibling, __root(tree));
+                        replace_sibling = __right(replace_parent);
+                    }
+
+                    replace_sibling->color = replace_parent->color;
+                    replace_parent->color = s_rb_tree_color_black;
+
+                    if (__has_right(replace_sibling)) {
+                        __right(replace_sibling)->color = s_rb_tree_color_black;
+                    }
+
+                    __rotate_left(replace_parent, __root(tree));
+                    break;
+                }
+            }
+            else {
+                CTreeNode* replace_sibling = __left(replace_parent);
+                if (__is_red(replace_sibling)) {
+                    replace_sibling->color = s_rb_tree_color_black;
+                    replace_parent->color = s_rb_tree_color_red;
+                    __rotate_right(replace_parent, __root(tree));
+                    replace_sibling = __left(replace_parent);
+                }
+
+                if ((!__has_left(replace_sibling) || __is_black(__left(replace_sibling))) &&
+                    (!__has_right(replace_sibling) || __is_black(__right(replace_sibling)))) {
+                    replace_sibling->color = s_rb_tree_color_red;
+                    replace_node = replace_parent;
+                    replace_parent = __parent(replace_parent);
+                }
+                else {
+                    if (!__has_left(replace_sibling) || __is_black(__left(replace_sibling))) {
+                        if (__has_right(replace_sibling)) {
+                            __right(replace_sibling)->color = s_rb_tree_color_black;
+                        }
+                        replace_sibling->color = s_rb_tree_color_red;
+                        __rotate_left(replace_sibling, __root(tree));
+                        replace_sibling = __left(replace_parent);
+                    }
+
+                    replace_sibling->color = replace_parent->color;
+                    replace_parent->color = s_rb_tree_color_black;
+
+                    if (__has_left(replace_sibling)) {
+                        __left(replace_sibling)->color = s_rb_tree_color_black;
+                    }
+
+                    __rotate_right(replace_parent, __root(tree));
+                    break;
+                }
+            }
+        }
+
+        if (replace_node) {
+            replace_node->color = s_rb_tree_color_black;
+        }
+    }
+
     __destroy_node(erase_node);
+    --(tree->node_count);
 }
 
 void CTREE_Clear(CTree* tree)

@@ -12,7 +12,7 @@ extern "C" {
 #endif // __cplusplus
 
 struct __c_list_node;
-typedef struct __c_list_node CListNode;
+typedef struct __c_list_node* CListIterator;
 
 struct __c_list;
 typedef struct __c_list CList;
@@ -28,15 +28,15 @@ void CLIST_DestroyList(CList* list);
  */
 CReferencePtr CLIST_Front(CList* list);
 CReferencePtr CLIST_Back(CList* list);
-CReferencePtr CLIST_Reference(CListNode* node);
+CReferencePtr CLIST_Reference(CListIterator iter);
 
 /**
  * iterators
  */
-CListNode* CLIST_Begin(CList* list);
-CListNode* CLIST_End(CList* list);
-void CLIST_Forward(CListNode** node);
-void CLIST_Backward(CListNode** node);
+CListIterator CLIST_Begin(CList* list);
+CListIterator CLIST_End(CList* list);
+void CLIST_Forward(CListIterator* iter);
+void CLIST_Backward(CListIterator* iter);
 
 /**
  * capacity
@@ -48,12 +48,13 @@ size_t CLIST_MaxSize(void);
 /**
  * modifiers
  */
+void CLIST_Clear(CList* list);
+CListIterator CLIST_Insert(CList* list, CListIterator pos, CReferencePtr data);
+CListIterator CLIST_Erase(CList* list, CListIterator pos);
 void CLIST_PushBack(CList* list, CReferencePtr data);
 void CLIST_PopBack(CList* list);
 void CLIST_PushFront(CList* list, CReferencePtr data);
 void CLIST_PopFront(CList* list);
-CListNode* CLIST_Insert(CList* list, CListNode* pos, CReferencePtr data);
-void CLIST_Erase(CList* list, CListNode* pos);
 
 /**
  * operations
@@ -67,13 +68,12 @@ void CLIST_Unique(CList* list, CBinaryPredicate pred);
 /**
  * algorithms
  */
-CListNode* CLIST_Find(CList* list, CReferencePtr data);
-CListNode* CLIST_FindIf(CList* list, CUnaryPredicate pred);
-void CLIST_ForEach(CListNode* first, CListNode* last, CUnaryFunction func);
+CListIterator CLIST_Find(CList* list, CReferencePtr data);
+CListIterator CLIST_FindIf(CList* list, CUnaryPredicate pred);
+void CLIST_ForEach(CListIterator first, CListIterator last, CUnaryFunction func);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
 #endif  // __HANDY_C_CONTAINER_LIST_H
-

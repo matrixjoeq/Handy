@@ -30,6 +30,7 @@ const Param params[] = {
     { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 },
     { 9, 9, 8, 7, 7, 7, 6, 5, 4, 3 },
     { 8, 2, 5, 7, 0, 1, 4, 6, 3, 9 },
+    { 1, 2, 2, 3, 1, 1, 2, 2, 1, 1 },
 };
 
 template<typename T, int N>
@@ -38,6 +39,15 @@ bool Equal(CReferencePtr data)
     T* data_ = reinterpret_cast<T*>(data);
 
     return (*data_ == N);
+}
+
+template<typename T>
+bool Equal(CReferencePtr x, CReferencePtr y)
+{
+    T* x_ = reinterpret_cast<T*>(x);
+    T* y_ = reinterpret_cast<T*>(y);
+
+    return (*x_ == *y_);
 }
 
 template<typename T>
@@ -68,7 +78,7 @@ void PlusOne(CReferencePtr data)
 template <typename T>
 void traverse(CList* list)
 {
-    for (CListNode* it = CLIST_Begin(list); it != CLIST_End(list); CLIST_Forward(&it)) {
+    for (CListIterator it = CLIST_Begin(list); it != CLIST_End(list); CLIST_Forward(&it)) {
         CReferencePtr ref = CLIST_Reference(it);
         T* data = reinterpret_cast<T*>(ref);
         printf("%d ", *data);
@@ -99,7 +109,7 @@ TEST(CListTest, Iterator)
     CREATE_LIST(list);
     CREATE_DATA(first, int, value);
     CLIST_PushBack(list, first);
-    CListNode* it = CLIST_Begin(list);
+    CListIterator it = CLIST_Begin(list);
     EXPECT_EQ(CLIST_Reference(it), first);
     CLIST_Forward(&it);
     EXPECT_EQ(CLIST_End(list), it);
@@ -180,7 +190,7 @@ TEST_P(CListTestModifier, InsertErase)
 
     ARRAY_FOREACH(param.numbers, i) {
         CREATE_DATA(num, int, param.numbers[i]);
-        CListNode* node = CLIST_Insert(list, CLIST_Begin(list), num);
+        CListIterator node = CLIST_Insert(list, CLIST_Begin(list), num);
         EXPECT_FALSE(CLIST_Empty(list));
         EXPECT_EQ(CLIST_Size(list), i + 1);
         EXPECT_EQ(CLIST_Begin(list), node);
@@ -188,7 +198,7 @@ TEST_P(CListTestModifier, InsertErase)
     }
 
     while (!CLIST_Empty(list)) {
-        CListNode* begin = CLIST_Begin(list);
+        CListIterator begin = CLIST_Begin(list);
         size_t size = CLIST_Size(list);
         CLIST_Erase(list, CLIST_Begin(list));
         EXPECT_NE(CLIST_Begin(list), begin);
@@ -208,10 +218,18 @@ TEST_P(CListTestOperation, Remove)
         CLIST_PushBack(list, num);
     }
 
+    printf("original list: ");
+    traverse<int>(list);
+
     while (!CLIST_Empty(list)) {
         CReferencePtr data = CLIST_Front(list);
-        CLIST_Remove(list, data);
-        EXPECT_EQ(CLIST_End(list), CLIST_Find(list, data));
+        int* num = (int*)malloc(sizeof(int));
+        memcpy(num, data, sizeof(int));
+        CLIST_Remove(list, num);
+        EXPECT_EQ(CLIST_End(list), CLIST_Find(list, num));
+        free(num);
+        printf("after remove: ");
+        traverse<int>(list);
     }
 
     DESTROY_LIST(list);
@@ -227,8 +245,14 @@ TEST_P(CListTestOperation, RemoveIf)
         CLIST_PushBack(list, num);
     }
 
-    CLIST_RemoveIf(list, Equal<int, 4>);
-    EXPECT_EQ(CLIST_End(list), CLIST_FindIf(list, Equal<int, 4>));
+    printf("original list: ");
+    traverse<int>(list);
+
+    CLIST_RemoveIf(list, Equal<int, 1>);
+    EXPECT_EQ(CLIST_End(list), CLIST_FindIf(list, Equal<int, 1>));
+
+    printf("after remove: ");
+    traverse<int>(list);
 
     DESTROY_LIST(list);
 }
@@ -277,6 +301,26 @@ TEST_P(CListTestOperation, Reverse)
     DESTROY_LIST(list);
 }
 
+TEST_P(CListTestOperation, Unique)
+{
+    Param param = GetParam();
+    CREATE_LIST(list);
+
+    ARRAY_FOREACH(param.numbers, i) {
+        CREATE_DATA(num, int, param.numbers[i]);
+        CLIST_PushBack(list, num);
+    }
+
+    printf("original list: ");
+    traverse<int>(list);
+
+    printf("unique list: ");
+    CLIST_Unique(list, Equal<int>);
+    traverse<int>(list);
+
+    DESTROY_LIST(list);
+}
+
 TEST_P(CListTestAlgorithm, Find)
 {
     Param param = GetParam();
@@ -285,7 +329,7 @@ TEST_P(CListTestAlgorithm, Find)
     ARRAY_FOREACH(param.numbers, i) {
         CREATE_DATA(num, int, param.numbers[i]);
         CLIST_PushBack(list, num);
-        CListNode* found = CLIST_Find(list, num);
+        CListIterator found = CLIST_Find(list, num);
         EXPECT_NE(CLIST_End(list), found);
         int* found_number = reinterpret_cast<int*>(CLIST_Reference(found));
         EXPECT_EQ(param.numbers[i], *found_number);
@@ -296,6 +340,7 @@ TEST_P(CListTestAlgorithm, Find)
 
 TEST_P(CListTestAlgorithm, FindIf)
 {
+    const int to_be_found = 1;
     Param param = GetParam();
     CREATE_LIST(list);
 
@@ -304,7 +349,12 @@ TEST_P(CListTestAlgorithm, FindIf)
         CLIST_PushBack(list, num);
     }
 
-    EXPECT_NE(CLIST_End(list), CLIST_FindIf(list, Equal<int, 4>));
+    CListIterator iter = CLIST_FindIf(list, Equal<int, to_be_found>);
+    if (iter != CLIST_End(list)) {
+        CReferencePtr data = CLIST_Reference(iter);
+        int* found = reinterpret_cast<int*>(data);
+        EXPECT_EQ(to_be_found, *found);
+    }
 
     DESTROY_LIST(list);
 }

@@ -121,7 +121,12 @@ TEST(CTreeTest, Erase)
     ARRAY_FOREACH(removes, i) {
         CTreeNode* found = CTREE_Find(tree, &removes[i]);
         EXPECT_NE(found, CTREE_End(tree));
-        CTREE_Erase(tree, found);
+        CTreeNode* ret = CTREE_Erase(tree, found);
+        if (ret != CTREE_End(tree)) {
+            CReferencePtr ret_ref = CTREE_Reference(ret);
+            int* ret_value = reinterpret_cast<int*>(ret_ref);
+            printf("erase return value = %d\n", *ret_value);
+        }
         found = CTREE_Find(tree, &removes[i]);
         EXPECT_EQ(found, CTREE_End(tree));
 

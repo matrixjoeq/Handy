@@ -512,11 +512,14 @@ CTreeNode* CTREE_InsertUnique(CTree* tree, CReferencePtr data)
     return NULL;
 }
 
-void CTREE_Erase(CTree* tree, CTreeNode* node)
+CTreeNode* CTREE_Erase(CTree* tree, CTreeNode* node)
 {
     if (!tree || !node) {
-        return;
+        return CTREE_End(tree);
     }
+
+    CTreeNode* ret_node = node;
+    CTREE_Forward(&ret_node);
 
     CTreeNode* erase_node = node;
     CTreeNode* replace_node = NULL;
@@ -700,6 +703,8 @@ void CTREE_Erase(CTree* tree, CTreeNode* node)
 
     __destroy_node(erase_node);
     --(tree->node_count);
+
+    return ret_node;
 }
 
 void CTREE_Clear(CTree* tree)

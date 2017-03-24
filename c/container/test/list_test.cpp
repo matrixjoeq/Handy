@@ -183,6 +183,23 @@ TEST_P(CListTestModifier, PushPopReferenceFront)
     DESTROY_LIST(list);
 }
 
+TEST_P(CListTestModifier, Clear)
+{
+    Param param = GetParam();
+    CREATE_LIST(list);
+
+    ARRAY_FOREACH(param.numbers, i) {
+        CREATE_DATA(num, int, param.numbers[i]);
+        CLIST_PushBack(list, num);
+    }
+
+    CLIST_Clear(list);
+    EXPECT_TRUE(CLIST_Size(list) == 0);
+    EXPECT_TRUE(CLIST_Empty(list));
+
+    DESTROY_LIST(list);
+}
+
 TEST_P(CListTestModifier, InsertErase)
 {
     Param param = GetParam();

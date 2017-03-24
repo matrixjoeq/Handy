@@ -89,11 +89,9 @@ CSetIterator CSET_Insert(CSet* set, CReferencePtr data)
     return (CSetIterator)CTREE_InsertUnique(set->repr, data);
 }
 
-void CSET_Erase(CSet* set, CSetIterator it)
+CSetIterator CSET_Erase(CSet* set, CSetIterator it)
 {
-    if (set && it) {
-        CTREE_Erase(set->repr, (CTreeNode*)it);
-    }
+    return (set && it) ? CTREE_Erase(set->repr, (CTreeNode*)it) : CSET_End(set);
 }
 
 void CSET_Clear(CSet* set)

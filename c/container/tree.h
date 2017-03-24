@@ -47,7 +47,7 @@ size_t CTREE_MaxSize(void);
  */
 CTreeNode* CTREE_InsertEqual(CTree* tree, CReferencePtr data);
 CTreeNode* CTREE_InsertUnique(CTree* tree, CReferencePtr data);
-void CTREE_Erase(CTree* tree, CTreeNode* node);
+CTreeNode* CTREE_Erase(CTree* tree, CTreeNode* node);
 void CTREE_Clear(CTree* tree);
 
 /**

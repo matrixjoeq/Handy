@@ -46,9 +46,10 @@ size_t CSET_MaxSize(void);
 /**
  * modifiers
  */
-CSetIterator CSET_Insert(CSet* set, CReferencePtr data);
-void CSET_Erase(CSet* set, CSetIterator it);
 void CSET_Clear(CSet* set);
+CSetIterator CSET_Insert(CSet* set, CReferencePtr data);
+CSetIterator CSET_Erase(CSet* set, CSetIterator it);
+
 
 /**
  * algorithms

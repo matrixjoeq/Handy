@@ -201,6 +201,14 @@ size_t CLIST_MaxSize(void)
 /**
  * modifiers
  */
+void CLIST_Clear(CList* list)
+{
+    CListIterator iter = CLIST_Begin(list);
+    while (iter != CLIST_End(list)) {
+        iter = __pop_node(iter);
+    }
+}
+
 void CLIST_PushBack(CList* list, CReferencePtr data)
 {
     if (!list || !data) {

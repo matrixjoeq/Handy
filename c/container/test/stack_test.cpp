@@ -4,7 +4,6 @@
 #include "stack.h"
 
 namespace handy {
-namespace c {
 namespace {
 
 #define CREATE_STACK(__stack) \
@@ -53,5 +52,4 @@ TEST(CStackTest, PushPopReference)
 }
 
 } // namespace
-} // namespace c
 } // namespace handy

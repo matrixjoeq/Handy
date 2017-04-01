@@ -4,7 +4,6 @@
 #include "queue.h"
 
 namespace handy {
-namespace c {
 namespace {
 
 #define CREATE_QUEUE(__queue) \
@@ -53,5 +52,4 @@ TEST(CQueueTest, PushPopReference)
 }
 
 } // namespace
-} // namespace c
 } // namespace handy

@@ -4,7 +4,6 @@
 #include "tree.h"
 
 namespace handy {
-namespace c {
 namespace {
 
 using ::testing::TestWithParam;
@@ -205,5 +204,4 @@ INSTANTIATE_TEST_CASE_P(CTreeTest, CTreeTestUnique, ValuesIn(unique_params));
 INSTANTIATE_TEST_CASE_P(CTreeTest, CTreeTestEqual, ValuesIn(equal_params));
 
 } // namespace
-} // namespace c
 } // namespace handy

@@ -4,7 +4,6 @@
 #include "set.h"
 
 namespace handy {
-namespace c {
 namespace {
 
 using ::testing::TestWithParam;
@@ -168,5 +167,4 @@ INSTANTIATE_TEST_CASE_P(CSetTest, CSetTestUnique, ValuesIn(unique_params));
 INSTANTIATE_TEST_CASE_P(CSetTest, CSetTestEqual, ValuesIn(equal_params));
 
 } // namespace
-} // namespace c
 } // namespace handy

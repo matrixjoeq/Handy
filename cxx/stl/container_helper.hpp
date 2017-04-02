@@ -56,10 +56,10 @@ inline typename std::multimap<Key, Value>::iterator erase_first(std::multimap<Ke
 {
 	for (typename std::multimap<Key, Value>::iterator iter = map.begin(); iter != map.end(); ++iter) {
 		if (iter->second == value) {
-#if (__cplusplus < 201103L) // C++ 98
+#if (__cplusplus < 201103L) // until C++11
 			map.erase(iter++);
 			return iter;
-#else
+#else // since C++11
 			return map.erase(iter);
 #endif
 		}

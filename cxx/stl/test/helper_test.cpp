@@ -1,13 +1,19 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include "print_elements.h"
-#include "vector_helper.h"
+#include <vector>
+#include <list>
+#include <deque>
+#include <stack>
+#include <queue>
+#include <map>
+#include <set>
+#include "container_helper.hpp"
 
 namespace handy {
 namespace {
 
-TEST(PrintElementsTest, Print)
+TEST(ContainerHelperTest, PrintElements)
 {
     std::vector<int> v;
     for (int i = 0; i < 10; ++i) {
@@ -17,7 +23,7 @@ TEST(PrintElementsTest, Print)
     print_elements(v, std::cout);
 }
 
-TEST(VectorHelperTest, EraseFirst)
+TEST(ContainerHelperTest, SeqEraseFirst)
 {
     std::vector<int> v;
     for (int i = 0; i < 10; ++i) {
@@ -31,7 +37,21 @@ TEST(VectorHelperTest, EraseFirst)
     EXPECT_TRUE(v.size() == 0);
 }
 
-TEST(VectorHelperTest, EraseAll)
+TEST(ContainerHelperTest, MapEraseFirst)
+{
+    std::map<int, int> m;
+    for (int i = 0; i < 10; ++i) {
+        m[i] = i;
+    }
+
+    for (int i = 0; i < 10; ++i) {
+        erase_first(m, i);
+    }
+
+    EXPECT_TRUE(m.size() == 0);
+}
+
+TEST(ContainerHelperTest, SequenceEraseAll)
 {
     std::vector<int> v;
     for (int i = 0; i < 10; ++i) {
@@ -40,6 +60,17 @@ TEST(VectorHelperTest, EraseAll)
 
     erase_all(v, 0);
     EXPECT_TRUE(v.size() == 0);
+}
+
+TEST(ContainerHelperTest, MapEraseAll)
+{
+    std::map<int, int> m;
+    for (int i = 0; i < 10; ++i) {
+        m[i] = 0;
+    }
+
+    erase_all(m, 0);
+    EXPECT_TRUE(m.size() == 0);
 }
 
 } // namespace
